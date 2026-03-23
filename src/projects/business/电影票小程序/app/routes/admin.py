@@ -1,12 +1,23 @@
 # -*- coding: utf-8 -*-
 """
 管理后台 API
+
+安全设计:
+- 使用Bearer Token认证，支持时序攻击防护
+- 请求频率限制防止暴力破解
+- 输入数据严格校验和清洗
+- 敏感操作日志记录
+- SQL注入防护（使用ORM参数化查询）
 """
 import random
+import secrets
+import logging
+import re
 from datetime import datetime, timedelta
-from typing import Optional, List
-from fastapi import APIRouter, Depends, HTTPException, Header, Query
-from pydantic import BaseModel, Field
+from typing import Optional, List, Dict, Any
+from fastapi import APIRouter, Depends, HTTPException, Header, Query, Request
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from pydantic import BaseModel, Field, validator
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -19,20 +30,78 @@ from app.services.order_service import order_service
 from app.services.code_word_service import code_word_service
 
 router = APIRouter()
+security = HTTPBearer()
+logger = logging.getLogger(__name__)
+
+
+# ==================== 安全工具 ====================
+
+def secure_compare(a: str, b: str) -> bool:
+    """
+    安全的字符串比较，防止时序攻击
+    使用secrets.compare_digest确保比较时间恒定
+    """
+    if not isinstance(a, str) or not isinstance(b, str):
+        return False
+    return secrets.compare_digest(a.encode('utf-8'), b.encode('utf-8'))
+
+
+def sanitize_input(text: Optional[str], max_length: int = 500) -> Optional[str]:
+    """
+    清理用户输入，防止XSS攻击
+    - 移除HTML标签
+    - 限制长度
+    - 转义特殊字符
+    """
+    if not text:
+        return text
+
+    # 限制长度
+    text = text[:max_length]
+
+    # 移除HTML标签
+    text = re.sub(r'<[^>]+>', '', text)
+
+    # 转义特殊字符
+    text = text.replace('&', '&amp;')
+    text = text.replace('<', '&lt;')
+    text = text.replace('>', '&gt;')
+    text = text.replace('"', '&quot;')
+    text = text.replace("'", '&#x27;')
+
+    return text
 
 
 # ==================== 认证 ====================
 
-async def verify_admin(authorization: Optional[str] = Header(None)) -> bool:
-    """验证管理员权限"""
-    if not authorization:
+async def verify_admin(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+) -> bool:
+    """
+    验证管理员权限
+
+    安全特性:
+    - 使用时序安全比较
+    - 详细日志记录
+    - 标准化错误响应
+    """
+    if not credentials or not credentials.credentials:
+        logger.warning("Admin auth failed: No credentials provided")
         raise HTTPException(status_code=401, detail="未授权")
 
-    token = authorization.replace("Bearer ", "") if authorization.startswith("Bearer ") else authorization
+    token = credentials.credentials
 
-    if token != settings.ADMIN_TOKEN:
+    # 验证Token格式（至少6个字符）
+    if not token or len(token) < 6:
+        logger.warning("Admin auth failed: Invalid token format")
+        raise HTTPException(status_code=401, detail="无效的令牌格式")
+
+    # 使用时序安全比较
+    if not secure_compare(token, settings.ADMIN_TOKEN):
+        logger.warning("Admin auth failed: Invalid token")
         raise HTTPException(status_code=401, detail="无效的令牌")
 
+    logger.debug("Admin auth successful")
     return True
 
 
@@ -43,38 +112,160 @@ class AcceptOrderRequest(BaseModel):
     channel_id: Optional[int] = Field(None, description="出票渠道ID")
     note: Optional[str] = Field(None, description="备注")
 
+    @validator('note')
+    def validate_note(cls, v):
+        """验证备注内容"""
+        if v is None:
+            return v
+        return sanitize_input(v, max_length=200)
+
+    class Config:
+        # 禁止额外字段，防止注入
+        extra = 'forbid'
+
 
 class TicketOrderRequest(BaseModel):
     """出票请求"""
-    seats: str = Field(..., description="座位号，如 '5排6,7座'")
-    code_word: str = Field(..., description="暗号")
-    code_word_type: str = Field("blessing", description="暗号类型")
-    ticket_code: Optional[str] = Field(None, description="票码")
+    seats: str = Field(..., description="座位号，如 '5排6,7座'", max_length=100)
+    code_word: str = Field(..., description="暗号", max_length=50)
+    code_word_type: str = Field("blessing", description="暗号类型: blessing/number/custom")
+    ticket_code: Optional[str] = Field(None, description="票码", max_length=500)
+
+    @validator('seats')
+    def validate_seats(cls, v):
+        """验证座位号格式"""
+        if not v or not v.strip():
+            raise ValueError('座位号不能为空')
+        # 验证格式：排X座,Y座 或 X排Y座
+        v = sanitize_input(v, max_length=100)
+        return v.strip()
+
+    @validator('code_word')
+    def validate_code_word(cls, v):
+        """验证暗号格式"""
+        if not v or not v.strip():
+            raise ValueError('暗号不能为空')
+        # 清理并验证
+        v = sanitize_input(v, max_length=50)
+        if len(v) < 1 or len(v) > 50:
+            raise ValueError('暗号长度必须在1-50字符之间')
+        return v.strip()
+
+    @validator('code_word_type')
+    def validate_code_word_type(cls, v):
+        """验证暗号类型"""
+        allowed_types = ['blessing', 'number', 'custom']
+        if v not in allowed_types:
+            raise ValueError(f'暗号类型必须是以下之一: {", ".join(allowed_types)}')
+        return v
+
+    class Config:
+        extra = 'forbid'
 
 
 class RejectOrderRequest(BaseModel):
     """拒绝订单请求"""
-    reason: str = Field(..., description="退款原因")
-    coupon_amount: float = Field(0, ge=0, description="补偿券金额")
+    reason: str = Field(..., description="退款原因", max_length=200)
+    coupon_amount: float = Field(0, ge=0, le=1000, description="补偿券金额")
+
+    @validator('reason')
+    def validate_reason(cls, v):
+        """验证退款原因"""
+        if not v or not v.strip():
+            raise ValueError('退款原因不能为空')
+        v = sanitize_input(v, max_length=200)
+        if len(v) < 2:
+            raise ValueError('退款原因至少需要2个字符')
+        return v.strip()
+
+    class Config:
+        extra = 'forbid'
 
 
 class UpdateCinemaRequest(BaseModel):
     """更新影院请求"""
-    priority: Optional[int] = None
-    tags: Optional[List[str]] = None
-    manager_contact: Optional[str] = None
+    priority: Optional[int] = Field(None, ge=-100, le=1000, description="优先级")
+    tags: Optional[List[str]] = Field(None, description="标签列表")
+    manager_contact: Optional[str] = Field(None, description="经理联系方式", max_length=100)
+
+    @validator('tags')
+    def validate_tags(cls, v):
+        """验证标签列表"""
+        if v is None:
+            return v
+        # 限制标签数量
+        if len(v) > 10:
+            raise ValueError('最多只能有10个标签')
+        # 清理每个标签
+        cleaned_tags = []
+        for tag in v:
+            tag = sanitize_input(tag, max_length=20)
+            if tag and tag not in cleaned_tags:
+                cleaned_tags.append(tag)
+        return cleaned_tags
+
+    @validator('manager_contact')
+    def validate_contact(cls, v):
+        """验证联系方式"""
+        if v is None:
+            return v
+        v = sanitize_input(v, max_length=100)
+        return v.strip() if v else None
+
+    class Config:
+        extra = 'forbid'
 
 
 class CreateCodeWordRequest(BaseModel):
     """创建暗号请求"""
-    word: str
-    type: str = "blessing"
+    word: str = Field(..., description="暗号内容", max_length=50)
+    type: str = Field("blessing", description="暗号类型")
+
+    @validator('word')
+    def validate_word(cls, v):
+        """验证暗号内容"""
+        if not v or not v.strip():
+            raise ValueError('暗号不能为空')
+        v = sanitize_input(v, max_length=50)
+        # 验证字符（只允许中文、数字、字母）
+        if not re.match(r'^[\u4e00-\u9fa5a-zA-Z0-9]+$', v):
+            raise ValueError('暗号只能包含中文、数字或字母')
+        return v.strip()
+
+    @validator('type')
+    def validate_type(cls, v):
+        """验证暗号类型"""
+        allowed = ['blessing', 'number', 'custom']
+        if v not in allowed:
+            raise ValueError(f'类型必须是以下之一: {", ".join(allowed)}')
+        return v
+
+    class Config:
+        extra = 'forbid'
 
 
 class SetSystemStatusRequest(BaseModel):
     """设置系统状态请求"""
-    status: str = Field(..., description="normal/overload/closed")
-    announcement: Optional[str] = None
+    status: str = Field(..., description="运营状态: normal/overload/closed")
+    announcement: Optional[str] = Field(None, description="公告内容", max_length=1000)
+
+    @validator('status')
+    def validate_status(cls, v):
+        """验证状态值"""
+        allowed = ['normal', 'overload', 'closed']
+        if v not in allowed:
+            raise ValueError(f'状态必须是以下之一: {", ".join(allowed)}')
+        return v
+
+    @validator('announcement')
+    def validate_announcement(cls, v):
+        """验证公告内容"""
+        if v is None:
+            return v
+        return sanitize_input(v, max_length=1000)
+
+    class Config:
+        extra = 'forbid'
 
 
 # ==================== 订单管理 ====================
