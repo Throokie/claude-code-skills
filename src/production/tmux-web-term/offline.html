@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>tmux-web-term 离线</title>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(circle at top, #1f2937, #0f172a 60%, #020617);
+      color: #e5e7eb;
+      font-family: "Segoe UI", sans-serif;
+    }
+
+    main {
+      width: min(92vw, 460px);
+      padding: 28px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 20px;
+      background: rgba(15, 23, 42, 0.86);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+    }
+
+    h1 {
+      margin: 0 0 12px;
+      font-size: 22px;
+    }
+
+    p {
+      margin: 0;
+      color: #cbd5e1;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>tmux-web-term 当前离线</h1>
+    <p>应用外壳已缓存，但终端连接依赖网络。网络恢复后重新打开页面即可继续连接服务器。</p>
+  </main>
+</body>
+</html>

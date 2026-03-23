@@ -1,0 +1,34 @@
+{
+  "name": "tmux-web-term",
+  "short_name": "tmux-term",
+  "description": "Web-based mobile terminal for tmux sessions",
+  "start_url": "/index.html?source=pwa",
+  "display": "standalone",
+  "background_color": "#1a1a2e",
+  "theme_color": "#1a1a2e",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["developer tools", "productivity"],
+  "shortcuts": [
+    {
+      "name": "新建会话",
+      "short_name": "New Session",
+      "description": "创建新的 tmux 会话",
+      "url": "/index.html?action=new-session",
+      "icons": [{ "src": "/icon.svg", "sizes": "any" }]
+    }
+  ]
+}

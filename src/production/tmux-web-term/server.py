@@ -26,6 +26,7 @@ from http.server import HTTPServer, SimpleHTTPRequestHandler
 import http
 import json
 import os
+import sys
 import pty
 import select
 import struct
@@ -119,6 +120,32 @@ def cleanup_pty_session(pid: int, master_fd: Optional[int] = None, timeout: floa
         print(f"[Cleanup] 清理 PTY 会话失败: {e}")
         return False
 
+# ==================== Token 工具 ====================
+def normalize_token_value(token: Any) -> str:
+    """规范化单个 token，避免空白字符导致认证失败"""
+    if token is None:
+        return ""
+    return str(token).strip()
+
+
+def normalize_token_set(tokens: Any) -> Set[str]:
+    """规范化 token 集合，过滤空值"""
+    if not tokens:
+        return set()
+
+    if isinstance(tokens, str):
+        items = tokens.split(',')
+    else:
+        items = tokens
+
+    normalized = set()
+    for token in items:
+        value = normalize_token_value(token)
+        if value:
+            normalized.add(value)
+
+    return normalized
+
 
 # ==================== 配置管理 ====================
 @dataclass
@@ -162,10 +189,12 @@ class ServerConfig:
             # 生产环境：从环境变量或配置文件获取 token，无默认值
             env_token = os.environ.get('TMUX_TERM_TOKEN')
             if env_token:
-                self.access_tokens = set(env_token.split(','))
+                self.access_tokens = normalize_token_set(env_token)
             else:
                 # 无默认 token，必须在配置中设置
                 self.access_tokens = set()
+        else:
+            self.access_tokens = normalize_token_set(self.access_tokens)
         if self.ip_whitelist is None:
             self.ip_whitelist = set()
         if self.shell is None:
@@ -188,7 +217,7 @@ class ServerConfig:
                 ws_port=data.get('ws_port', 9865),
                 wss_port=data.get('wss_port', 9864),
                 http_port=data.get('http_port', 9866),
-                access_tokens=set(data.get('access_tokens', ['tmux-web-term-2026'])),
+                access_tokens=normalize_token_set(data.get('access_tokens', ['tmux-web-term-2026'])),
                 ip_whitelist=set(data.get('ip_whitelist', [])),
                 wss_required=data.get('wss_required', False),
                 mode=data.get('mode', 'pty'),
@@ -224,7 +253,7 @@ class ServerConfig:
         if os.environ.get('HTTP_PORT'):
             config.http_port = int(os.environ['HTTP_PORT'])
         if os.environ.get('TMUX_TERM_TOKEN'):
-            config.access_tokens = set(os.environ['TMUX_TERM_TOKEN'].split(','))
+            config.access_tokens = normalize_token_set(os.environ['TMUX_TERM_TOKEN'])
         if os.environ.get('IP_WHITELIST'):
             config.ip_whitelist = set(ip.strip() for ip in os.environ['IP_WHITELIST'].split(',') if ip.strip())
         if os.environ.get('TMUX_MODE'):
@@ -277,6 +306,39 @@ def get_tmux_sessions():
     except Exception as e:
         print(f"获取 tmux 会话失败：{e}")
         return [CONFIG.default_session]
+
+
+def get_tmux_online_count(session_name: Optional[str]) -> int:
+    """统计连接到指定 tmux 会话的在线设备数"""
+    if not session_name:
+        return 0
+
+    return sum(
+        1
+        for session in pty_sessions.values()
+        if session.get('mode') == 'tmux' and session.get('session') == session_name
+    )
+
+
+async def broadcast_tmux_presence(session_name: Optional[str]):
+    """向同一 tmux 会话的所有客户端广播在线设备数"""
+    if not session_name:
+        return
+
+    payload = json.dumps({
+        "type": "session_presence",
+        "session": session_name,
+        "online_count": get_tmux_online_count(session_name)
+    })
+
+    for websocket, session in list(pty_sessions.items()):
+        if session.get('mode') != 'tmux' or session.get('session') != session_name:
+            continue
+
+        try:
+            await websocket.send(payload)
+        except Exception as e:
+            print(f"[Presence] 广播失败 ({session_name}): {e}")
 
 
 def get_smallest_ws_session():
@@ -583,12 +645,16 @@ async def authenticate_websocket(websocket) -> bool:
             await websocket.close(1008, "First message must be auth")
             return False
 
-        token = auth_data.get('token', '')
-        timestamp = auth_data.get('timestamp', 0)
+        token = normalize_token_value(auth_data.get('token', ''))
+        raw_timestamp = auth_data.get('timestamp', 0)
+        try:
+            timestamp = int(raw_timestamp)
+        except (TypeError, ValueError):
+            timestamp = 0
 
         # 验证时间戳防重放 (±5分钟)
         now = int(time.time() * 1000)
-        if abs(now - timestamp) > 5 * 60 * 1000:  # 5分钟
+        if timestamp and abs(now - timestamp) > 5 * 60 * 1000:  # 5分钟
             print(f"[AUTH] {client_ip} 时间戳无效 (delta={abs(now - timestamp)}ms)")
             await websocket.send(json.dumps({
                 "type": "auth_result",
@@ -600,7 +666,7 @@ async def authenticate_websocket(websocket) -> bool:
 
         # 验证 Token
         if token not in CONFIG.access_tokens:
-            print(f"[AUTH] {client_ip} Token 无效")
+            print(f"[AUTH] {client_ip} Token 无效，收到={token!r}，可用 token 数={len(CONFIG.access_tokens)}")
             await websocket.send(json.dumps({
                 "type": "auth_result",
                 "success": False,
@@ -733,14 +799,6 @@ async def handle_tmux_mode(websocket):
             available_session = get_any_available_session()
             session_name = available_session if available_session else CONFIG.default_session
 
-        # 获取并发送会话列表
-        sessions = get_tmux_sessions()
-        await websocket.send(json.dumps({
-            "type": "sessions",
-            "sessions": sessions,
-            "current": session_name
-        }))
-
         # 确保会话存在
         session_created, actual_session_name = ensure_tmux_session(session_name)
         if not session_created:
@@ -798,13 +856,25 @@ async def handle_tmux_mode(websocket):
 
             print(f"[+] tmux 会话连接成功 (session={session_name}, pid={pid})")
 
+            online_count = get_tmux_online_count(session_name)
+
+            sessions = get_tmux_sessions()
+            await websocket.send(json.dumps({
+                "type": "sessions",
+                "sessions": sessions,
+                "current": session_name
+            }))
+
             await websocket.send(json.dumps({
                 "type": "init",
                 "session": session_name,
                 "pid": pid,
                 "mode": "tmux",
+                "online_count": online_count,
                 "recording": CONFIG.recording_enabled and CONFIG.recording_auto_start
             }))
+
+            await broadcast_tmux_presence(session_name)
 
             await run_terminal_loop(websocket, master_fd, pid, session_name)
 
@@ -912,10 +982,12 @@ async def run_terminal_loop(websocket, master_fd, pid, session_name=None):
 
                     elif msg_type == 'list_sessions':
                         sessions = get_tmux_sessions()
+                        current_session = pty_sessions.get(websocket, {}).get('session', session_name or CONFIG.default_session)
                         await websocket.send(json.dumps({
                             "type": "sessions",
                             "sessions": sessions,
-                            "current": session_name or CONFIG.default_session
+                            "current": current_session,
+                            "online_count": get_tmux_online_count(current_session)
                         }))
                         continue
 
@@ -976,12 +1048,14 @@ async def run_terminal_loop(websocket, master_fd, pid, session_name=None):
         # 清理会话 (PRD 2.1.1: 使用 Mosh/TTYD 标准清理方案)
         if websocket in pty_sessions:
             session = pty_sessions[websocket]
+            closed_tmux_session = session.get('session') if session.get('mode') == 'tmux' else None
             cleanup_pty_session(
                 pid=session['pid'],
                 master_fd=session.get('fd'),
                 timeout=5.0
             )
             del pty_sessions[websocket]
+            await broadcast_tmux_presence(closed_tmux_session)
 
         read_task.cancel()
         try:
@@ -1116,7 +1190,7 @@ async def main():
         print(f"⚠️  WSS 未启用（未配置 SSL 证书）")
 
     # 启动 WebSocket 服务器
-    ws_server = await websockets.serve(
+    await websockets.serve(
         handle_client,
         CONFIG.bind_ip,
         CONFIG.ws_port,
@@ -1127,6 +1201,15 @@ async def main():
     )
 
     if ssl_context:
+        await websockets.serve(
+            handle_client,
+            CONFIG.bind_ip,
+            CONFIG.wss_port,
+            ssl=ssl_context,
+            ping_interval=CONFIG.heartbeat_interval,
+            ping_timeout=CONFIG.ping_timeout,
+            process_request=authenticate_request
+        )
         print(f"✅ WSS 服务器已启动 (端口：{CONFIG.wss_port})")
     else:
         print(f"⚠️  WSS 未启用")

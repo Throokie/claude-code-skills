@@ -7,6 +7,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#0c0c0c">
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="manifest" href="/manifest.json">
     <title>tmux-web-term 移动端</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css">
@@ -57,6 +58,23 @@
             background: rgba(0,0,0,0.3);
             padding: 4px 10px;
             border-radius: 12px;
+        }
+
+        .status-meta {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.04);
+            color: #cfcfcf;
         }
         
         .status-dot {
@@ -449,20 +467,31 @@
             .header h1 {
                 font-size: 14px;
             }
-            
+
             .status {
                 font-size: 11px;
                 padding: 3px 8px;
             }
-            
+
             .keys-row button {
                 padding: 9px 12px;
                 font-size: 11px;
             }
-            
+
             .input-row input {
                 font-size: 13px;
                 padding: 9px 10px;
+            }
+
+            /* 会话列表面板移动端优化 */
+            #sessionPanel {
+                top: 50px !important;
+                right: 10px !important;
+                left: 10px !important;
+                max-height: 50vh !important;
+                min-width: auto !important;
+                width: calc(100vw - 20px) !important;
+                border-radius: 12px !important;
             }
         }
         
@@ -488,8 +517,12 @@
         <h1>🦞 tmux-web-term</h1>
         <div class="status">
             <div class="status-dot" id="statusDot"></div>
-            <span id="statusText">连接中</span>
-            <span id="modeIndicator" class="mode-indicator" style="margin-left:10px;font-size:12px;color:#888;">🟢 PTY 模式</span>
+            <div class="status-meta">
+                <span id="statusText">连接中</span>
+                <span id="modeIndicator" class="mode-indicator">🟢 PTY 模式</span>
+                <span id="sessionIndicator" class="status-pill">ws1</span>
+                <span id="presenceIndicator" class="status-pill">👥 0 在线</span>
+            </div>
         </div>
         <div style="display:flex;gap:6px;">
             <button class="session-btn" id="recordBtn" onclick="toggleRecording()" title="录制控制" style="padding:4px 8px;">⏺</button>
@@ -518,7 +551,7 @@
     <div id="toastContainer" style="position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:2000;max-width:90%;width:350px;"></div>
 
     <!-- 会话列表面板 -->
-    <div id="sessionPanel" style="display:none;position:fixed;top:60px;right:10px;background:#1a1a1e;border:1px solid #333;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,0.5);z-index:1000;max-height:350px;overflow-y:auto;min-width:220px;">
+    <div id="sessionPanel" style="display:none;position:fixed;top:60px;right:10px;background:#1a1a1e;border:1px solid #333;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,0.5);z-index:1000;max-height:min(350px, 60vh);overflow-y:auto;min-width:220px;max-width:calc(100vw - 20px);">
         <div style="padding:12px 15px;border-bottom:1px solid #333;display:flex;justify-content:space-between;align-items:center;">
             <span style="font-size:12px;color:#888;">会话列表</span>
             <button onclick="refreshSessions()" style="background:#2a2a35;color:#4ade80;border:1px solid #4ade80;border-radius:6px;padding:2px 8px;font-size:11px;cursor:pointer;" title="刷新列表">↻</button>
@@ -631,6 +664,7 @@
         let ws = null;
         let reconnectAttempts = 0;
         const MAX_RECONNECT_ATTEMPTS = 15;
+        const DEFAULT_SESSION = 'ws1';
         let isConnecting = false;
         let heartbeatInterval = null;
         const HEARTBEAT_INTERVAL = 30000; // 30 秒心跳
@@ -643,17 +677,63 @@
         function getWebSocketUrl() {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
             const host = window.location.hostname || 'localhost';
-            const port = '9865';
+            const port = protocol === 'wss:' ? '9864' : '9865';
             // PRD 2.1.2: Token 通过 WebSocket 首条消息传递，不在 URL 中
             // 但 session 参数需要通过 URL 传递，以便服务器知道要连接哪个 tmux 会话
-            const urlParams = new URLSearchParams(window.location.search);
-            const session = urlParams.get('session');
+            const session = getPreferredSession();
             const wsUrl = `${protocol}//${host}:${port}`;
             // 如果有指定会话，添加到 WebSocket URL
             if (session) {
                 return `${wsUrl}?session=${encodeURIComponent(session)}`;
             }
             return wsUrl;
+        }
+
+        function getPreferredSession() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlSession = urlParams.get('session');
+            if (urlSession) return urlSession;
+
+            const storedSession = localStorage.getItem('tmux_session');
+            if (storedSession) return storedSession;
+
+            return DEFAULT_SESSION;
+        }
+
+        function updateSessionIndicator(sessionName) {
+            const sessionIndicator = document.getElementById('sessionIndicator');
+            if (!sessionIndicator) return;
+            sessionIndicator.textContent = sessionName || '独立终端';
+        }
+
+        function updatePresenceIndicator(onlineCount) {
+            const presenceIndicator = document.getElementById('presenceIndicator');
+            if (!presenceIndicator) return;
+
+            if (typeof onlineCount === 'number') {
+                presenceIndicator.textContent = `👥 ${onlineCount} 在线`;
+                presenceIndicator.style.display = 'inline-flex';
+            } else {
+                presenceIndicator.textContent = '👥 -';
+                presenceIndicator.style.display = 'inline-flex';
+            }
+        }
+
+        function syncSessionState(sessionName, options = {}) {
+            if (!sessionName) return;
+
+            const { updateUrl = true } = options;
+            currentSession = sessionName;
+            localStorage.setItem('tmux_session', sessionName);
+            updateSessionIndicator(sessionName);
+
+            if (updateUrl) {
+                const url = new URL(window.location.href);
+                if (url.searchParams.get('session') !== sessionName) {
+                    url.searchParams.set('session', sessionName);
+                    window.history.replaceState({}, '', url.toString());
+                }
+            }
         }
 
         // PRD 2.1.2: 获取 Token（用于 WebSocket 首条消息认证）
@@ -682,6 +762,16 @@
 
         // 显示 Token 输入界面
         function showTokenInput(errorMessage) {
+            // 重置重连状态，防止自动重连
+            reconnectAttempts = MAX_RECONNECT_ATTEMPTS;
+            isConnecting = false;
+
+            // 清除可能存在的重连定时器
+            if (window.reconnectTimer) {
+                clearTimeout(window.reconnectTimer);
+                window.reconnectTimer = null;
+            }
+
             const loadingEl = document.getElementById('connectLoading');
             const tokenAreaEl = document.getElementById('tokenInputArea');
             const tokenErrorEl = document.getElementById('tokenError');
@@ -691,6 +781,8 @@
             if (errorMessage && tokenErrorEl) {
                 tokenErrorEl.textContent = errorMessage;
                 tokenErrorEl.classList.remove('hidden');
+            } else if (tokenErrorEl) {
+                tokenErrorEl.classList.add('hidden');
             }
 
             document.getElementById('connectOverlay').classList.remove('hidden');
@@ -726,6 +818,9 @@
 
             // 隐藏错误
             document.getElementById('tokenError').classList.add('hidden');
+
+            // 重置重连计数器，允许新的重连尝试
+            reconnectAttempts = 0;
 
             // 显示加载中并开始连接
             showLoading();
@@ -796,6 +891,14 @@
                 document.getElementById('connectOverlay').classList.remove('hidden');
 
                 // 自动重连（指数退避）
+                // 如果没有 token，不要自动重连，等待用户输入
+                const token = getToken();
+                if (!token) {
+                    console.log('[Reconnect] 无可用 token，停止自动重连，等待用户输入');
+                    showTokenInput();
+                    return;
+                }
+
                 if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
                     reconnectAttempts++;
                     const delay = calculateExponentialBackoff(reconnectAttempts);
@@ -803,7 +906,7 @@
                     document.querySelector('.connect-text').textContent =
                         `连接断开，${delaySeconds}秒后重连... (${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})`;
                     console.log(`[Reconnect] ${delaySeconds}s 后重试 (attempt ${reconnectAttempts})`);
-                    setTimeout(connect, delay);
+                    window.reconnectTimer = setTimeout(connect, delay);
                 } else {
                     document.querySelector('.connect-text').textContent =
                         '连接失败，请刷新页面重试';
@@ -846,8 +949,16 @@
                                 showToast('认证失败: ' + data.message, 'error', 0);
                                 // 清除错误的 token
                                 localStorage.removeItem('tmux_token');
+                                // 停止重连，避免无效循环
+                                reconnectAttempts = MAX_RECONNECT_ATTEMPTS;
+                                isConnecting = false;
+                                // 关闭现有连接
+                                if (ws) {
+                                    ws.close();
+                                    ws = null;
+                                }
                                 // 显示 token 输入界面让用户重新输入
-                                showTokenInput('Token 无效或已过期，请重新输入');
+                                showTokenInput(data.message || '认证失败，请重新输入 Token');
                             }
                         } else if (data.type === 'init') {
                             term.writeln('\r\n\x1b[32m\x1b[1m[终端已启动]\x1b[0m\r\n');
@@ -855,20 +966,17 @@
                             if (data.mode) {
                                 serverMode = data.mode;
                                 console.log('[Server] 模式:', data.mode);
+                                updateModeIndicator(data.mode);
                             }
-                            // 如果是 tmux 模式，请求会话列表
                             if (data.mode === 'tmux' && data.session) {
-                                // 优先使用服务器返回的会话名（与URL参数可能不同）
-                                currentSession = data.session;
-                                // 同步更新 URL 参数，确保刷新后保持一致
-                                const url = new URL(window.location.href);
-                                const urlSession = url.searchParams.get('session');
-                                if (urlSession !== data.session) {
-                                    url.searchParams.set('session', data.session);
-                                    window.history.replaceState({}, '', url.toString());
-                                    console.log('[Session] URL参数已同步为:', data.session);
-                                }
+                                syncSessionState(data.session);
+                                updatePresenceIndicator(
+                                    typeof data.online_count === 'number' ? data.online_count : 1
+                                );
                                 refreshSessions();
+                            } else {
+                                updateSessionIndicator('独立终端');
+                                updatePresenceIndicator(null);
                             }
                             // 检查是否已启用录制
                             if (data.recording === true) {
@@ -890,20 +998,16 @@
                         } else if (data.type === 'sessions') {
                             // 更新会话列表
                             renderSessionList(data.sessions, data.current);
+                            if (serverMode === 'tmux' && data.current) {
+                                syncSessionState(data.current);
+                            }
+                            if (serverMode === 'tmux' && typeof data.online_count === 'number') {
+                                updatePresenceIndicator(data.online_count);
+                            }
                         } else if (data.type === 'switch_request') {
                             // 切换会话请求 - 需要刷新页面重连
                             showToast(data.message || '正在切换会话...', 'info', 2000);
-                            // 立即更新 URL 参数，确保刷新后连接到正确的会话
-                            const url = new URL(window.location.href);
-                            url.searchParams.set('session', data.session);
-                            // 保留token：优先使用URL中的，否则从localStorage获取
-                            const existingToken = url.searchParams.get('token');
-                            const storedToken = localStorage.getItem('tmux_token');
-                            if (!existingToken && storedToken) {
-                                url.searchParams.set('token', storedToken);
-                            }
-                            // 使用 replaceState 先更新 URL，不刷新页面
-                            window.history.replaceState({}, '', url.toString());
+                            syncSessionState(data.session);
                             console.log('[Session] URL已更新为:', data.session);
                             // 延迟刷新页面，让用户看到提示
                             setTimeout(function() {
@@ -912,8 +1016,12 @@
 
                         } else if (data.type === 'session_switched') {
                             showToast('已切换到会话：' + data.session, 'success', 2000);
-                            currentSession = data.session;
+                            syncSessionState(data.session);
                             refreshSessions();
+                        } else if (data.type === 'session_presence') {
+                            if (data.session && data.session === currentSession) {
+                                updatePresenceIndicator(data.online_count);
+                            }
                         } else if (data.type === 'recording_started') {
                             startRecording();
                         } else if (data.type === 'recording_stopped') {
@@ -1078,7 +1186,7 @@
 
         // ==================== 会话管理 ====================
         let allSessions = [];
-        let currentSession = '';
+        let currentSession = getPreferredSession();
         let serverMode = 'pty'; // 'pty' or 'tmux'
 
         // F-003: 更新模式指示器
@@ -1098,11 +1206,13 @@
                 'fallback': '降级模式'
             };
 
-            const modeText = labels[mode] || mode;
-            const icon = reason === 'tmux_session_failed' ? icons['fallback'] : icons[mode] || '🟢';
+            const isFallback = reason === 'tmux_session_failed';
+            const modeKey = isFallback ? 'fallback' : mode;
+            const modeText = isFallback ? 'PTY 模式（降级）' : (labels[mode] || mode);
+            const icon = icons[modeKey] || '🟢';
 
             modeIndicator.innerHTML = `${icon} ${modeText}`;
-            modeIndicator.className = `mode-indicator mode-${mode}`;
+            modeIndicator.className = `mode-indicator mode-${modeKey}`;
 
             if (reason) {
                 modeIndicator.title = reason === 'tmux_session_failed'
@@ -1145,7 +1255,9 @@
 
         function renderSessionList(sessions, current) {
             allSessions = sessions;
-            currentSession = current;
+            if (serverMode === 'tmux' && current) {
+                syncSessionState(current, { updateUrl: false });
+            }
             const list = document.getElementById('sessionList');
             list.innerHTML = '';
 
@@ -1156,15 +1268,29 @@
 
             sessions.forEach(function(session) {
                 const item = document.createElement('div');
-                item.style.cssText = 'padding:10px 15px;border-bottom:1px solid #2a2a30;cursor:pointer;font-size:13px;display:flex;justify-content:space-between;align-items:center;transition:background 0.15s;';
+                // 移动端优化：增加高度到48px，添加左侧指示条
+                item.style.cssText = 'padding:12px 15px;border-bottom:1px solid #2a2a30;cursor:pointer;font-size:14px;display:flex;justify-content:space-between;align-items:center;transition:background 0.15s;min-height:48px;';
                 if (session === current) {
                     item.style.background = 'rgba(74,222,128,0.1)';
-                    item.innerHTML = `<span style="color:#4ade80;">${session}</span><span style="color:#4ade80;font-size:11px;">● 当前</span>`;
+                    // 添加左侧绿色指示条和省略号
+                    item.innerHTML = `
+                        <div style="display:flex;align-items:center;flex:1;min-width:0;">
+                            <div style="width:3px;height:20px;background:#4ade80;border-radius:2px;margin-right:10px;flex-shrink:0;"></div>
+                            <span style="color:#4ade80;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;">${session}</span>
+                        </div>
+                        <span style="color:#4ade80;font-size:11px;flex-shrink:0;margin-left:8px;">● 当前</span>
+                    `;
                 } else {
                     item.style.background = 'transparent';
                     item.onmouseenter = function() { this.style.background = '#2a2a35'; };
                     item.onmouseleave = function() { this.style.background = 'transparent'; };
-                    item.innerHTML = `<span>${session}</span>`;
+                    // 添加省略号处理
+                    item.innerHTML = `
+                        <div style="display:flex;align-items:center;flex:1;min-width:0;">
+                            <div style="width:3px;height:20px;background:transparent;border-radius:2px;margin-right:10px;flex-shrink:0;"></div>
+                            <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;">${session}</span>
+                        </div>
+                    `;
                     item.onclick = function() { switchSession(session); };
                 }
                 list.appendChild(item);
@@ -1318,6 +1444,9 @@
 
         // ==================== 启动连接 ====================
         console.log('[App] 启动 tmux-web-term 前端');
+        syncSessionState(currentSession);
+        updateModeIndicator(serverMode);
+        updatePresenceIndicator(null);
 
         // 绑定 Token 输入相关事件
         document.getElementById('tokenSubmitBtn')?.addEventListener('click', handleTokenSubmit);
@@ -1328,6 +1457,14 @@
         });
 
         connect();
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js').catch(function(error) {
+                    console.warn('[PWA] Service Worker 注册失败:', error);
+                });
+            });
+        }
         
         // 页面可见性变化时重新聚焦
         document.addEventListener('visibilitychange', function() {
