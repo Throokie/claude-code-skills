@@ -8,6 +8,8 @@
 
 **Production-ready Claude Code extensions for building software at scale**
 
+[English](README.md) • [简体中文](README.zh-CN.md) • [繁體中文](README.zh-TW.md)
+
 [Installation](#installation) • [Quick Start](#quick-start) • [Workflow](#recommended-workflow) • [Skills](#available-skills) • [Agents](#available-agents)
 
 </div>
@@ -182,7 +184,7 @@ The **Ralph Evolution** methodology for building software with Claude Code:
 
 ## 🔥 Why This Works
 
-> **"低端模型也能跑出不错的成绩"**
+> **"Even low-end models can produce excellent results"**
 
 The secret is **composition**:
 
