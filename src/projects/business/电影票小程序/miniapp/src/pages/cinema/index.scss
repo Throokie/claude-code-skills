@@ -1,0 +1,95 @@
+.cinema-page {
+  min-height: 100vh;
+  background: #f5f5f5;
+}
+
+.cinema-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+
+  .cinema-name {
+    display: block;
+    font-size: 20px;
+    font-weight: bold;
+    color: #fff;
+  }
+
+  .date-label {
+    display: block;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.8);
+    margin-top: 8px;
+  }
+
+  .price-text {
+    display: block;
+    font-size: 14px;
+    color: #ffd700;
+    margin-top: 8px;
+  }
+}
+
+.movie-list {
+  padding: 10px;
+}
+
+.movie-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 10px;
+}
+
+.movie-name {
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+}
+
+.movie-info-text {
+  display: block;
+  font-size: 12px;
+  color: #999;
+  margin-top: 4px;
+}
+
+.show-list {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.show-item {
+  width: 30%;
+  background: #f8f8f8;
+  border-radius: 4px;
+  padding: 8px;
+  margin-right: 5%;
+  margin-bottom: 8px;
+  text-align: center;
+
+  &:nth-child(3n) {
+    margin-right: 0;
+  }
+}
+
+.show-time {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.show-hall {
+  display: block;
+  font-size: 12px;
+  color: #999;
+  margin-top: 4px;
+}
+
+.show-price {
+  display: block;
+  font-size: 12px;
+  color: #667eea;
+  margin-top: 4px;
+}

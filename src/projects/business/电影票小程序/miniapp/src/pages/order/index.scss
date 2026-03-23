@@ -1,0 +1,112 @@
+.order-page {
+  min-height: 100vh;
+  background: #f5f5f5;
+  padding: 10px;
+}
+
+.movie-info-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 10px;
+
+  .movie-name {
+    display: block;
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+  }
+
+  .cinema-name {
+    display: block;
+    font-size: 14px;
+    color: #666;
+    margin-top: 8px;
+  }
+
+  .show-time {
+    display: block;
+    font-size: 14px;
+    color: #667eea;
+    margin-top: 4px;
+  }
+}
+
+.section {
+  background: #fff;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 10px;
+}
+
+.section-title {
+  display: block;
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 12px;
+}
+
+.count-selector {
+  display: flex;
+  gap: 10px;
+}
+
+.count-btn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 16px;
+  color: #333;
+
+  &.active {
+    background: #667eea;
+    color: #fff;
+    border-color: #667eea;
+  }
+}
+
+.picker {
+  background: #f8f8f8;
+  padding: 12px;
+  border-radius: 4px;
+  color: #333;
+}
+
+.remark-input {
+  width: 100%;
+  background: #f8f8f8;
+  padding: 12px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.price-section {
+  background: #fff;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.price-label {
+  font-size: 14px;
+  color: #666;
+}
+
+.price-total {
+  font-size: 16px;
+  font-weight: bold;
+  color: #f56c6c;
+}
+
+.submit-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  border-radius: 25px;
+  margin-top: 20px;
+}

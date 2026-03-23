@@ -1,0 +1,1 @@
+import{r,h as s,H as o}from"./p-f72fcd8c.js";import{n as t}from"./p-dbdb9de9.js";const c=class{constructor(s){r(this,s)}componentDidLoad(){t("Script",this)}render(){return s(o,null)}};export{c as S}

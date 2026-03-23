@@ -1,0 +1,1 @@
+export{A as taro_aweme_data_core}from"./p-2f7b8388.js";import"./p-f72fcd8c.js";import"./p-dbdb9de9.js";import"@tarojs/taro";

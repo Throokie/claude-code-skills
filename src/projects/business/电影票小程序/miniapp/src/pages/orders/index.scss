@@ -1,0 +1,124 @@
+.orders-page {
+  min-height: 100vh;
+  background: #f5f5f5;
+}
+
+.header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  .title {
+    font-size: 20px;
+    font-weight: bold;
+    color: #fff;
+  }
+
+  .mock-tag {
+    background: rgba(255, 255, 255, 0.3);
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    color: #fff;
+    cursor: pointer;
+  }
+}
+
+.order-list {
+  padding: 10px;
+}
+
+.order-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 10px;
+}
+
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.order-no {
+  font-size: 12px;
+  color: #999;
+}
+
+.status {
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 4px;
+
+  &.status-pending { background: #f0f0f0; color: #999; }
+  &.status-paid { background: #fef0e6; color: #e6a23c; }
+  &.status-accepted { background: #f0e6ff; color: #9966ff; }
+  &.status-ticketed { background: #e6f7e6; color: #67c23a; }
+  &.status-completed { background: #e6f0ff; color: #409eff; }
+  &.status-refunded { background: #fee6e6; color: #f56c6c; }
+}
+
+.movie-name {
+  display: block;
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+}
+
+.cinema-name {
+  display: block;
+  font-size: 14px;
+  color: #666;
+  margin-top: 4px;
+}
+
+.show-info {
+  display: block;
+  font-size: 14px;
+  color: #667eea;
+  margin-top: 4px;
+}
+
+.ticket-info {
+  background: #f8f8f8;
+  padding: 12px;
+  border-radius: 4px;
+  margin-top: 12px;
+
+  .seats {
+    display: block;
+    font-size: 14px;
+    color: #333;
+  }
+
+  .code-word {
+    display: block;
+    font-size: 16px;
+    font-weight: bold;
+    color: #67c23a;
+    margin-top: 8px;
+  }
+}
+
+.order-footer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.price {
+  font-size: 16px;
+  font-weight: bold;
+  color: #f56c6c;
+}
+
+.count {
+  font-size: 14px;
+  color: #999;
+}

@@ -1,0 +1,1 @@
+import{r as o,h as r,H as s}from"./p-f72fcd8c.js";import{n as t}from"./p-dbdb9de9.js";const n=class{constructor(r){o(this,r)}componentDidLoad(){t("Lottie",this)}render(){return r(s,null)}};export{n as L}

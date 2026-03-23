@@ -1,0 +1,1 @@
+import{r as s,h as r,H as o}from"./p-f72fcd8c.js";import{n as t}from"./p-dbdb9de9.js";const e=class{constructor(r){s(this,r)}componentDidLoad(){t("Lifestyle",this)}render(){return r(o,null)}};export{e as L}

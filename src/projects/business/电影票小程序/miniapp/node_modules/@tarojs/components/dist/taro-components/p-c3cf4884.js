@@ -1,0 +1,1 @@
+import{r,h as s,H as o}from"./p-f72fcd8c.js";import{n as t}from"./p-dbdb9de9.js";const d=class{constructor(s){r(this,s)}componentDidLoad(){t("GridBuilder",this)}render(){return s(o,null)}};export{d as G}

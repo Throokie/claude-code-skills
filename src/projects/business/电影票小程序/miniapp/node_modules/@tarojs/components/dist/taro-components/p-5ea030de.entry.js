@@ -1,0 +1,1 @@
+export{C as taro_cover_image_core}from"./p-d5773721.js";import"./p-f72fcd8c.js";

@@ -1,0 +1,1 @@
+import{r,h as o,H as s}from"./p-f72fcd8c.js";import{n}from"./p-dbdb9de9.js";const t=class{constructor(o){r(this,o)}componentDidLoad(){n("OpenContainer",this)}render(){return o(s,null)}};export{t as O}

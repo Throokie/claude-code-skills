@@ -1,0 +1,1 @@
+export{R as taro_root_portal_core}from"./p-08cfc9f4.js";import"./p-f72fcd8c.js";import"./p-dbdb9de9.js";import"@tarojs/taro";

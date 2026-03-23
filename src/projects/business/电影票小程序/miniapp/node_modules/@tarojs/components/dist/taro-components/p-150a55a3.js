@@ -1,0 +1,1 @@
+import{r as o,h as r,H as s}from"./p-f72fcd8c.js";import{n}from"./p-dbdb9de9.js";const t=class{constructor(r){o(this,r)}componentDidLoad(){n("ChannelVideo",this)}render(){return r(s,null)}};export{t as C}

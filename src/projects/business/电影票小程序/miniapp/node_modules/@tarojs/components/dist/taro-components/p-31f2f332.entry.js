@@ -1,0 +1,1 @@
+export{T as taro_tab_item_core}from"./p-2bf24716.js";import"./p-f72fcd8c.js";import"./p-dbdb9de9.js";import"@tarojs/taro";

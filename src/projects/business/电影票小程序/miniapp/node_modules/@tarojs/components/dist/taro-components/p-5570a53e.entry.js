@@ -1,0 +1,1 @@
+export{W as taro_web_view_core}from"./p-beae3fe0.js";import"./p-f72fcd8c.js";

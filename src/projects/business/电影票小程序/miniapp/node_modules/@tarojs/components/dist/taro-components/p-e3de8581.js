@@ -1,0 +1,1 @@
+import{r,h as s,H as t}from"./p-f72fcd8c.js";const c=class{constructor(s){r(this,s)}render(){return s(t,null)}};export{c as B}

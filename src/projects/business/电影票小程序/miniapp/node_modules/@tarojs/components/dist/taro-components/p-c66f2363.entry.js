@@ -1,0 +1,1 @@
+export{C as taro_comment_detail_core}from"./p-fff1a810.js";import"./p-f72fcd8c.js";import"./p-dbdb9de9.js";import"@tarojs/taro";

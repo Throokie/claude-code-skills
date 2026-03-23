@@ -1,0 +1,49 @@
+{
+  "version": "3.0.1",
+  "name": "webpack-format-messages",
+  "repository": "lukeed/webpack-format-messages",
+  "description": "Beautiful formatting for Webpack messages; ported from Create React App!",
+  "module": "index.mjs",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "license": "MIT",
+  "author": {
+    "name": "Luke Edwards",
+    "email": "luke.edwards05@gmail.com",
+    "url": "https://lukeed.com"
+  },
+  "engines": {
+    "node": ">=6"
+  },
+  "exports": {
+    ".": {
+      "import": "./index.mjs",
+      "require": "./index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "index.mjs",
+    "index.d.ts"
+  ],
+  "scripts": {
+    "build": "bundt"
+  },
+  "dependencies": {
+    "kleur": "^4.0.0"
+  },
+  "devDependencies": {
+    "bundt": "1.1.2"
+  },
+  "keywords": [
+    "create-react-app",
+    "console",
+    "messages",
+    "webpack",
+    "pretty",
+    "format",
+    "stats",
+    "output"
+  ]
+}

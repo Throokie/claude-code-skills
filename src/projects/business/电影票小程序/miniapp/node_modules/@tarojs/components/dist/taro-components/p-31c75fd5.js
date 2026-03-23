@@ -1,0 +1,1 @@
+import{r,h as o,H as s}from"./p-f72fcd8c.js";import{n as t}from"./p-dbdb9de9.js";const d=class{constructor(o){r(this,o)}componentDidLoad(){t("Editor",this)}render(){return o(s,null)}};export{d as E}

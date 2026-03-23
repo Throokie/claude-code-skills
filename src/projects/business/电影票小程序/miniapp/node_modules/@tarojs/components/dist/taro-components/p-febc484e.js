@@ -1,0 +1,1 @@
+import{r as s,h as o,H as r}from"./p-f72fcd8c.js";import{n as t}from"./p-dbdb9de9.js";const n=class{constructor(o){s(this,o)}componentDidLoad(){t("CommentList",this)}render(){return o(r,null)}};export{n as C}

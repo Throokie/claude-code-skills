@@ -1,0 +1,1 @@
+export{a as taro_tabbar}from"./p-8d996705.js";import"./p-f72fcd8c.js";import"@tarojs/runtime";import"@tarojs/taro";import"./p-160d710a.js";import"resolve-pathname";import"./p-5893c3ed.js";

@@ -1,0 +1,1 @@
+import{r,h as s}from"./p-f72fcd8c.js";const t=class{constructor(s){r(this,s),this.for=void 0}render(){return s("label",{htmlFor:this.for},s("slot",null))}};export{t as L}

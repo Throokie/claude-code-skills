@@ -1,0 +1,1 @@
+export{M as taro_movable_area_core,a as taro_movable_view_core}from"./p-45c3b3bf.js";import"./p-f72fcd8c.js";import"./p-5893c3ed.js";

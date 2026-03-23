@@ -1,0 +1,1 @@
+import{r,h as s,H as t}from"./p-f72fcd8c.js";import{n as o}from"./p-dbdb9de9.js";const e=class{constructor(s){r(this,s)}componentDidLoad(){o("VerticalDragGestureHandler",this)}render(){return s(t,null)}};export{e as V}

@@ -1,0 +1,1 @@
+import{r as s,h as o,H as r}from"./p-f72fcd8c.js";import{n as t}from"./p-dbdb9de9.js";const d=class{constructor(o){s(this,o)}componentDidLoad(){t("AdCustom",this)}render(){return o(r,null)}};export{d as A}

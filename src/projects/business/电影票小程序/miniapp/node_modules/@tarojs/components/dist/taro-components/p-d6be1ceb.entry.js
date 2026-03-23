@@ -1,0 +1,1 @@
+export{S as taro_slider_core}from"./p-35aac6e0.js";import"./p-f72fcd8c.js";

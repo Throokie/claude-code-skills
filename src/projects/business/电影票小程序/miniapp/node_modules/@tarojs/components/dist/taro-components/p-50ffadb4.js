@@ -1,0 +1,1 @@
+import{r as o,h as r,H as s}from"./p-f72fcd8c.js";import{n as t}from"./p-dbdb9de9.js";const c=class{constructor(r){o(this,r)}componentDidLoad(){t("OfficialAccount",this)}render(){return r(s,null)}};export{c as O}

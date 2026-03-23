@@ -1,0 +1,1 @@
+export{L as taro_label_core}from"./p-8b1b513a.js";import"./p-f72fcd8c.js";

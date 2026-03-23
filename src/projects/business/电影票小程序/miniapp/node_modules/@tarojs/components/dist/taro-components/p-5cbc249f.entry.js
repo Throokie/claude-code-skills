@@ -1,0 +1,1 @@
+export{S as taro_switch_core}from"./p-4d79a974.js";import"./p-f72fcd8c.js";
