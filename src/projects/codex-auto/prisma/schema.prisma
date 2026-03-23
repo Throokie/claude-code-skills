@@ -1,0 +1,119 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// 账号状态枚举
+enum AccountStatus {
+  ACTIVE
+  RATE_LIMITED
+  SUSPENDED
+  EXPIRED
+  ERROR
+}
+
+// 账号模型 - 存储Codex账号信息
+model Account {
+  id             String        @id @default(uuid())
+  email          String        @unique
+  password       String        // 加密存储
+  status         AccountStatus @default(ACTIVE)
+  quotaRemaining Int           @default(0)
+  weight         Int           @default(1)     // 负载均衡权重
+  lastUsedAt     DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  // 元数据 JSON
+  metadata       String?       // JSON: { domain, proxy, userAgent }
+
+  // 健康检查信息
+  healthCheck    HealthCheck?
+
+  // 关联的请求日志
+  requestLogs    RequestLog[]
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+// 健康检查记录
+model HealthCheck {
+  id              String   @id @default(uuid())
+  accountId       String   @unique
+  account         Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  lastCheckedAt   DateTime @default(now())
+  successCount    Int      @default(0)
+  failCount       Int      @default(0)
+  lastError       String?
+  averageResponse Int      @default(0) // 平均响应时间(ms)
+
+  @@index([lastCheckedAt])
+}
+
+// API用户模型
+model ApiUser {
+  id        String   @id @default(uuid())
+  name      String
+  apiKey    String   @unique // bcrypt哈希存储
+  isActive  Boolean  @default(true)
+
+  // 限流配置 JSON
+  rateLimit String   // JSON: { requestsPerMinute, requestsPerHour, requestsPerDay }
+
+  // 配额配置 JSON
+  quota     String   // JSON: { used, total }
+
+  createdAt DateTime @default(now())
+  lastUsedAt DateTime?
+
+  // 关联的请求日志
+  requestLogs RequestLog[]
+
+  @@index([apiKey])
+  @@index([isActive])
+}
+
+// 请求日志模型
+model RequestLog {
+  id                String   @id @default(uuid())
+  apiUserId         String?
+  apiUser           ApiUser? @relation(fields: [apiUserId], references: [id], onDelete: SetNull)
+  accountId         String?
+  account           Account? @relation(fields: [accountId], references: [id], onDelete: SetNull)
+
+  model             String
+  promptTokens      Int      @default(0)
+  completionTokens  Int      @default(0)
+  totalTokens       Int      @default(0)
+  status            String   // 'success' | 'error'
+  errorMessage      String?
+  responseTime      Int      // ms
+  ipAddress         String?
+  userAgent         String?
+
+  createdAt         DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([apiUserId])
+  @@index([accountId])
+  @@index([status])
+}
+
+// 系统配置模型
+model Config {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  value       String   // JSON字符串
+  description String?
+  updatedAt   DateTime @updatedAt
+
+  @@index([key])
+}
