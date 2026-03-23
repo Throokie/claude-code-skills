@@ -30,34 +30,42 @@
             overflow: hidden;
         }
         
-        /* 顶部状态栏 */
+        /* 顶部状态栏 - 现代化 */
         .header {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            padding: 10px 15px;
+            background: linear-gradient(145deg, rgba(26, 26, 46, 0.98) 0%, rgba(22, 33, 62, 0.98) 100%);
+            padding: 12px 18px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid #333;
+            border-bottom: 1px solid rgba(74, 222, 128, 0.2);
             flex-shrink: 0;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
         }
-        
+
         .header h1 {
-            font-size: 15px;
-            color: #4ade80;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        
-        .status {
+            font-size: 16px;
+            background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
             display: flex;
             align-items: center;
             gap: 8px;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
             font-size: 12px;
-            background: rgba(0,0,0,0.3);
-            padding: 4px 10px;
-            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
         }
 
         .status-meta {
@@ -65,6 +73,8 @@
             align-items: center;
             gap: 6px;
             flex-wrap: wrap;
+            min-width: 0;
+            overflow: hidden;
         }
 
         .status-pill {
@@ -76,30 +86,743 @@
             background: rgba(255,255,255,0.04);
             color: #cfcfcf;
         }
-        
-        .status-dot {
-            width: 8px;
-            height: 8px;
+
+        /* 顶部工具栏展开区域 - 重新设计 */
+        .header-toolbar {
+            position: absolute;
+            top: 100%;
+            left: 10px;
+            right: 10px;
+            background: linear-gradient(145deg, rgba(30, 30, 45, 0.98), rgba(20, 20, 35, 0.98));
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(74, 222, 128, 0.15);
+            border-radius: 0 0 16px 16px;
+            padding: 20px;
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            transform: translateY(-100%);
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 999;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(74, 222, 128, 0.1);
+            max-height: 0;
+            overflow: hidden;
+        }
+
+        .header-toolbar.expanded {
+            transform: translateY(10px);
+            opacity: 1;
+            pointer-events: auto;
+            max-height: 200px;
+        }
+
+        .toolbar-btn {
+            background: linear-gradient(135deg, rgba(74, 222, 128, 0.1), rgba(74, 222, 128, 0.05));
+            border: 1px solid rgba(74, 222, 128, 0.2);
+            color: #4ade80;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            min-width: 100px;
+            justify-content: center;
+        }
+
+        .toolbar-btn:hover {
+            background: linear-gradient(135deg, rgba(74, 222, 128, 0.2), rgba(74, 222, 128, 0.1));
+            border-color: rgba(74, 222, 128, 0.4);
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 20px rgba(74, 222, 128, 0.2);
+        }
+
+        .toolbar-btn:active {
+            transform: translateY(0) scale(0.98);
+        }
+
+        .toolbar-btn.active {
+            background: linear-gradient(135deg, rgba(74, 222, 128, 0.3), rgba(74, 222, 128, 0.2));
+            border-color: #4ade80;
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(74, 222, 128, 0.3);
+        }
+
+        .header-expand-btn {
+            background: rgba(74, 222, 128, 0.1);
+            border: 1px solid rgba(74, 222, 128, 0.2);
+            color: #4ade80;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .header-expand-btn:hover {
+            background: rgba(74, 222, 128, 0.2);
+            border-color: rgba(74, 222, 128, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .header-expand-btn.expanded {
+            transform: rotate(180deg);
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+        }
+
+        /* 拖拽时的 FAB 样式 */
+        .fab-expand.dragging {
+            opacity: 0.8;
+            transform: scale(1.1);
+            cursor: grabbing;
+            transition: none;
+        }
+
+        /* 复制模式指示器 */
+        .copy-mode-indicator {
+            position: fixed;
+            top: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(145deg, rgba(251, 191, 36, 0.98) 0%, rgba(217, 119, 6, 0.98) 100%);
+            color: #000;
+            padding: 10px 20px;
+            border-radius: 24px;
+            font-size: 13px;
+            font-weight: 600;
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            box-shadow:
+                0 8px 32px rgba(251, 191, 36, 0.5),
+                0 4px 16px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            animation: slideDown 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(251, 191, 36, 0.5);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .copy-mode-indicator.visible {
+            display: flex;
+        }
+
+        /* 手势提示增强 */
+        .gesture-hint {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(10px);
+            color: #fff;
+            padding: 16px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+            z-index: 3000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            border: 1px solid rgba(74, 222, 128, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        .gesture-hint.visible {
+            opacity: 1;
+        }
+
+        /* 现代化滚动条 */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(74, 222, 128, 0.3);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(74, 222, 128, 0.5);
+        }
+
+        /* 动画定义 */
+        @keyframes slideDown {
+            from {
+                transform: translate(-50%, -20px);
+                opacity: 0;
+            }
+            to {
+                transform: translate(-50%, 0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* 玻璃拟态效果增强 */
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        #sessionIndicator {
+            max-width: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            flex-shrink: 1;
+        }
+
+        @media (max-width: 480px) {
+            #sessionIndicator {
+                max-width: 80px;
+            }
+
+            .keys-row-tmux {
+                display: flex;
+            }
+        }
+
+        /* ========== 主布局 ========== */
+        .main-layout {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            height: 100%;
+        }
+
+        .content-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .main-content {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+            background: #0c0c0c;
+        }
+
+        /* ========== 左侧边栏 ========== */
+        .sidebar {
+            width: 260px;
+            background: linear-gradient(180deg, rgba(22, 22, 32, 0.98) 0%, rgba(18, 18, 28, 0.98) 100%);
+            border-right: 1px solid rgba(74, 222, 128, 0.15);
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 100;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        .sidebar.collapsed {
+            transform: translateX(-100%);
+            width: 0;
+        }
+
+        .sidebar-header {
+            padding: 16px;
+            border-bottom: 1px solid rgba(74, 222, 128, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sidebar-title {
+            font-size: 16px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .sidebar-close {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #888;
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar-close:hover {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .session-list-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+        }
+
+        .session-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid transparent;
+            position: relative;
+        }
+
+        .session-item:hover {
+            background: rgba(74, 222, 128, 0.08);
+            border-color: rgba(74, 222, 128, 0.2);
+        }
+
+        .session-item.active {
+            background: linear-gradient(145deg, rgba(74, 222, 128, 0.15) 0%, rgba(34, 197, 94, 0.1) 100%);
+            border-color: rgba(74, 222, 128, 0.4);
+            box-shadow: 0 4px 12px rgba(74, 222, 128, 0.15);
+        }
+
+        .session-item-status {
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
-            background: #666;
-            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .session-item-status.online {
+            background: linear-gradient(145deg, #4ade80 0%, #22c55e 100%);
+            box-shadow: 0 0 8px rgba(74, 222, 128, 0.6);
+        }
+
+        .session-item-status.offline {
+            background: rgba(100, 100, 100, 0.8);
+        }
+
+        .session-item-status.connecting {
+            background: linear-gradient(145deg, #f59e0b 0%, #d97706 100%);
+            animation: pulse-glow 1.5s infinite;
+        }
+
+        .session-item-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .session-item-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: #e0e0e0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .session-item-meta {
+            font-size: 11px;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        .session-item-actions {
+            display: flex;
+            gap: 4px;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .session-item:hover .session-item-actions {
+            opacity: 1;
+        }
+
+        .session-item-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #888;
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .session-item-btn:hover {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .sidebar-footer {
+            padding: 12px;
+            border-top: 1px solid rgba(74, 222, 128, 0.1);
+        }
+
+        .new-session-btn {
+            width: 100%;
+            background: linear-gradient(145deg, rgba(74, 222, 128, 0.95) 0%, rgba(34, 197, 94, 0.95) 100%);
+            border: 2px solid rgba(74, 222, 128, 0.5);
+            border-radius: 12px;
+            padding: 12px;
+            color: #000;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 12px rgba(74, 222, 128, 0.3);
+        }
+
+        .new-session-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(74, 222, 128, 0.4);
+        }
+
+        .new-session-btn:active {
+            transform: translateY(0) scale(0.98);
+        }
+
+        /* 侧边栏切换按钮 */
+        .sidebar-toggle {
+            background: rgba(74, 222, 128, 0.1);
+            border: 1px solid rgba(74, 222, 128, 0.2);
+            color: #4ade80;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.2s ease;
+            margin-right: 8px;
+        }
+
+        .sidebar-toggle:hover {
+            background: rgba(74, 222, 128, 0.2);
+            border-color: rgba(74, 222, 128, 0.4);
+        }
+
+        /* ========== 底部固定操作栏 ========== */
+        .bottom-bar {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 8px 12px;
+            background: linear-gradient(180deg, rgba(26, 26, 30, 0.98) 0%, rgba(20, 20, 24, 0.98) 100%);
+            border-top: 1px solid rgba(74, 222, 128, 0.15);
+            gap: 8px;
+        }
+
+        .bottom-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 12px;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 12px;
+            color: #888;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            flex: 1;
+            max-width: 80px;
+        }
+
+        .bottom-btn span {
+            font-size: 20px;
+        }
+
+        .bottom-btn label {
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .bottom-btn:hover {
+            background: rgba(74, 222, 128, 0.08);
+            color: #a0a0a0;
+        }
+
+        .bottom-btn.active {
+            background: linear-gradient(145deg, rgba(74, 222, 128, 0.15) 0%, rgba(34, 197, 94, 0.1) 100%);
+            border-color: rgba(74, 222, 128, 0.3);
+            color: #4ade80;
+        }
+
+        /* ========== 快照视图 ========== */
+        .snapshot-view {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(180deg, rgba(15, 15, 20, 0.98) 0%, rgba(12, 12, 16, 0.98) 100%);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .snapshot-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(74, 222, 128, 0.15);
+        }
+
+        .snapshot-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #e0e0e0;
+        }
+
+        .snapshot-time {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .snapshot-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .snapshot-terminal {
+            background: linear-gradient(145deg, rgba(30, 30, 35, 0.98) 0%, rgba(25, 25, 30, 0.98) 100%);
+            border: 1px solid rgba(74, 222, 128, 0.15);
+            border-radius: 16px;
+            padding: 20px;
+            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #ccc;
+            overflow: auto;
+            min-height: 200px;
+            max-height: 60%;
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .snapshot-terminal pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .snapshot-actions {
+            display: flex;
+            gap: 12px;
+            padding-top: 15px;
+        }
+
+        .snapshot-btn {
+            flex: 1;
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid transparent;
+        }
+
+        .snapshot-btn.reconnect {
+            background: linear-gradient(145deg, rgba(74, 222, 128, 0.95) 0%, rgba(34, 197, 94, 0.95) 100%);
+            border-color: rgba(74, 222, 128, 0.5);
+            color: #000;
+            box-shadow: 0 4px 16px rgba(74, 222, 128, 0.3);
+        }
+
+        .snapshot-btn.reconnect:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(74, 222, 128, 0.4);
+        }
+
+        .snapshot-btn.delete {
+            background: linear-gradient(145deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.1) 100%);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+        }
+
+        .snapshot-btn.delete:hover {
+            background: linear-gradient(145deg, rgba(239, 68, 68, 0.2) 0%, rgba(220, 38, 38, 0.15) 100%);
+        }
+
+        /* ========== 移动端适配 ========== */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                z-index: 200;
+                box-shadow: 4px 0 20px rgba(0, 0, 0, 0.5);
+            }
+
+            .sidebar.collapsed {
+                transform: translateX(-100%);
+                width: 260px;
+            }
+
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 150;
+            }
+
+            .sidebar-overlay.visible {
+                display: block;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .bottom-btn label {
+                display: none;
+            }
+
+            .bottom-btn {
+                padding: 10px;
+            }
+
+            .snapshot-actions {
+                flex-direction: column;
+            }
+        }
+
+        /* ========== 移除旧的FAB样式 ========== */
+        .fab-container,
+        .fab-expand,
+        .kb-legend-btn {
+            display: none !important;
+        }
+
+        /* ========== 移除顶部工具栏 ========== */
+        .header-toolbar,
+        .header-expand-btn {
+            display: none !important;
+        }
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            z-index: 3000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .gesture-hint.visible {
+            opacity: 1;
         }
         
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(100, 100, 100, 0.8);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+        }
+
         .status-dot.connected {
-            background: #4ade80;
-            box-shadow: 0 0 8px #4ade80, 0 0 15px rgba(74, 222, 128, 0.4);
-            animation: pulse 2s infinite;
+            background: linear-gradient(145deg, #4ade80 0%, #22c55e 100%);
+            box-shadow:
+                0 0 12px rgba(74, 222, 128, 0.8),
+                0 0 20px rgba(74, 222, 128, 0.4);
+            animation: pulse-glow 2s infinite;
         }
 
         .status-dot.recording {
-            background: #ef4444;
-            box-shadow: 0 0 8px #ef4444, 0 0 15px rgba(239, 68, 68, 0.4);
+            background: linear-gradient(145deg, #ef4444 0%, #dc2626 100%);
+            box-shadow:
+                0 0 12px rgba(239, 68, 68, 0.8),
+                0 0 20px rgba(239, 68, 68, 0.4);
             animation: recording-pulse 1.5s infinite;
         }
 
+        @keyframes pulse-glow {
+            0%, 100% {
+                box-shadow:
+                    0 0 12px rgba(74, 222, 128, 0.8),
+                    0 0 20px rgba(74, 222, 128, 0.4);
+            }
+            50% {
+                box-shadow:
+                    0 0 16px rgba(74, 222, 128, 1),
+                    0 0 28px rgba(74, 222, 128, 0.6);
+            }
+        }
+
         @keyframes recording-pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+            0%, 100% {
+                box-shadow:
+                    0 0 12px rgba(239, 68, 68, 0.8),
+                    0 0 20px rgba(239, 68, 68, 0.4);
+            }
+            50% {
+                box-shadow:
+                    0 0 16px rgba(239, 68, 68, 1),
+                    0 0 28px rgba(239, 68, 68, 0.6);
+            }
         }
 
         #sessionSelect {
@@ -113,53 +836,80 @@
 
         /* 会话列表按钮 */
         .session-btn {
-            background: linear-gradient(135deg, #2a2a35 0%, #25252e 100%);
-            color: #e0e0e0;
-            border: 1px solid #3a3a45;
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-size: 12px;
+            background: linear-gradient(145deg, rgba(42, 42, 53, 0.95) 0%, rgba(37, 37, 46, 0.95) 100%);
+            color: #e8e8e8;
+            border: 1px solid rgba(90, 90, 105, 0.6);
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-size: 13px;
             font-weight: 500;
             cursor: pointer;
             white-space: nowrap;
-            transition: all 0.15s ease;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow:
+                0 2px 8px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .session-btn:hover {
+            transform: translateY(-1px);
+            border-color: rgba(120, 120, 135, 0.8);
+            box-shadow:
+                0 4px 12px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }
 
         .session-btn:active {
-            background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+            background: linear-gradient(145deg, rgba(74, 222, 128, 0.9) 0%, rgba(34, 197, 94, 0.9) 100%);
             color: #000;
-            border-color: #4ade80;
+            border-color: rgba(74, 222, 128, 0.8);
+            transform: translateY(0) scale(0.95);
+            box-shadow:
+                0 2px 6px rgba(74, 222, 128, 0.3),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.1);
         }
 
         .session-btn.active {
-            background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+            background: linear-gradient(145deg, rgba(74, 222, 128, 0.9) 0%, rgba(34, 197, 94, 0.9) 100%);
             color: #000;
-            border-color: #4ade80;
+            border-color: rgba(74, 222, 128, 0.8);
+            box-shadow:
+                0 2px 8px rgba(74, 222, 128, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
         }
         
         /* F-003: 模式指示器样式 */
         .mode-indicator {
             display: inline-flex;
             align-items: center;
-            gap: 4px;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: 500;
-            transition: all 0.3s ease;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         .mode-indicator.mode-tmux {
             color: #60a5fa;
-            background: rgba(96, 165, 250, 0.1);
+            background: linear-gradient(145deg, rgba(96, 165, 250, 0.15), rgba(37, 99, 235, 0.1));
+            border-color: rgba(96, 165, 250, 0.3);
+            box-shadow: 0 2px 8px rgba(96, 165, 250, 0.2);
         }
         .mode-indicator.mode-pty {
             color: #4ade80;
-            background: rgba(74, 222, 128, 0.1);
+            background: linear-gradient(145deg, rgba(74, 222, 128, 0.15), rgba(34, 197, 94, 0.1));
+            border-color: rgba(74, 222, 128, 0.3);
+            box-shadow: 0 2px 8px rgba(74, 222, 128, 0.2);
         }
         .mode-indicator.mode-fallback {
-            color: #fbbf24;
-            background: rgba(251, 191, 36, 0.1);
-            animation: pulse 2s infinite;
+            color: #f59e0b;
+            background: linear-gradient(145deg, rgba(245, 158, 11, 0.15), rgba(217, 119, 6, 0.1));
+            border-color: rgba(245, 158, 11, 0.3);
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2);
+            animation: pulse-glow 2s infinite;
         }
 
         @keyframes pulse {
@@ -184,58 +934,88 @@
             padding: 5px;
         }
         
-        /* 虚拟键盘区域 */
+        /* 虚拟键盘区域 - 现代化 */
         .keyboard-area {
-            background: #1a1a1e;
-            border-top: 1px solid #333;
+            background: linear-gradient(180deg, rgba(26, 26, 30, 0.98) 0%, rgba(20, 20, 24, 0.98) 100%);
+            border-top: 1px solid rgba(74, 222, 128, 0.15);
             flex-shrink: 0;
             display: flex;
             flex-direction: column;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
         }
-        
+
         /* 输入框行 */
         .input-row {
             display: flex;
-            padding: 8px;
-            gap: 8px;
-            background: #1f1f25;
-            border-bottom: 1px solid #2a2a30;
+            padding: 10px 12px;
+            gap: 10px;
+            background: linear-gradient(180deg, rgba(31, 31, 37, 0.98) 0%, rgba(27, 27, 33, 0.98) 100%);
+            border-bottom: 1px solid rgba(74, 222, 128, 0.1);
         }
         
         .input-row input {
             flex: 1;
-            background: #2a2a30;
-            border: 1px solid #3a3a45;
+            background: linear-gradient(145deg, rgba(42, 42, 48, 0.9) 0%, rgba(37, 37, 43, 0.9) 100%);
+            border: 1px solid rgba(80, 80, 95, 0.6);
             color: #fff;
-            padding: 10px 12px;
-            border-radius: 8px;
-            font-size: 14px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 15px;
             outline: none;
-            transition: border-color 0.2s;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow:
+                0 2px 8px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
         }
-        
+
+        .input-row input:hover {
+            border-color: rgba(100, 100, 115, 0.8);
+            box-shadow:
+                0 4px 12px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
         .input-row input:focus {
-            border-color: #4ade80;
+            border-color: rgba(74, 222, 128, 0.8);
+            box-shadow:
+                0 0 0 3px rgba(74, 222, 128, 0.15),
+                0 4px 16px rgba(74, 222, 128, 0.1);
+            background: linear-gradient(145deg, rgba(45, 45, 52, 0.95) 0%, rgba(40, 40, 47, 0.95) 100%);
         }
-        
+
         .input-row input::placeholder {
             color: #666;
+            font-style: italic;
         }
         
         .send-btn {
-            background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+            background: linear-gradient(145deg, rgba(74, 222, 128, 0.95) 0%, rgba(34, 197, 94, 0.95) 100%);
             color: #000;
-            border: none;
+            border: 2px solid rgba(74, 222, 128, 0.5);
             padding: 10px 20px;
-            border-radius: 8px;
+            border-radius: 12px;
             font-weight: 600;
             font-size: 14px;
             cursor: pointer;
-            transition: transform 0.1s, box-shadow 0.2s;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow:
+                0 4px 12px rgba(74, 222, 128, 0.3),
+                0 2px 6px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
         }
-        
+
+        .send-btn:hover {
+            transform: translateY(-2px);
+            box-shadow:
+                0 6px 20px rgba(74, 222, 128, 0.4),
+                0 3px 10px rgba(0, 0, 0, 0.3);
+        }
+
         .send-btn:active {
-            transform: scale(0.95);
+            transform: translateY(0) scale(0.95);
+            box-shadow:
+                0 2px 8px rgba(74, 222, 128, 0.2),
+                0 1px 4px rgba(0, 0, 0, 0.2);
         }
         
         /* 快捷键行 */
@@ -253,57 +1033,270 @@
         }
 
         .keys-row button {
-            background: linear-gradient(135deg, #2a2a35 0%, #25252e 100%);
-            color: #e0e0e0;
-            border: 1px solid #3a3a45;
-            padding: 10px 14px;
-            border-radius: 8px;
-            font-size: 12px;
+            background: linear-gradient(145deg, rgba(42, 42, 53, 0.95) 0%, rgba(37, 37, 46, 0.95) 100%);
+            color: #e8e8e8;
+            border: 1px solid rgba(90, 90, 105, 0.6);
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 13px;
             font-weight: 500;
             cursor: pointer;
             white-space: nowrap;
-            transition: all 0.15s ease;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             flex-shrink: 0;
+            box-shadow:
+                0 2px 8px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .keys-row button:hover {
+            transform: translateY(-1px);
+            box-shadow:
+                0 4px 12px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            border-color: rgba(120, 120, 135, 0.8);
         }
 
         .keys-row button:active {
-            background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+            background: linear-gradient(145deg, rgba(74, 222, 128, 0.9) 0%, rgba(34, 197, 94, 0.9) 100%);
             color: #000;
-            border-color: #4ade80;
-            transform: scale(0.95);
+            border-color: rgba(74, 222, 128, 0.8);
+            transform: translateY(0) scale(0.95);
+            box-shadow:
+                0 2px 6px rgba(74, 222, 128, 0.3),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.1);
         }
 
         .keys-row button.control {
-            background: linear-gradient(135deg, #3a3a45 0%, #353540 100%);
-            border-color: #4a4a55;
+            background: linear-gradient(145deg, rgba(58, 58, 69, 0.95) 0%, rgba(53, 53, 64, 0.95) 100%);
+            border-color: rgba(74, 74, 85, 0.8);
+            color: #b0b0c0;
+        }
+
+        .keys-row button.control:active {
+            background: linear-gradient(145deg, rgba(96, 165, 250, 0.9) 0%, rgba(59, 130, 246, 0.9) 100%);
+            border-color: rgba(96, 165, 250, 0.8);
+            color: #fff;
         }
 
         .keys-row button.app {
-            background: linear-gradient(135deg, #1e3a5f 0%, #1a2f4f 100%);
-            border-color: #2a4a6f;
+            background: linear-gradient(145deg, rgba(30, 58, 95, 0.95) 0%, rgba(26, 47, 79, 0.95) 100%);
+            border-color: rgba(42, 74, 111, 0.8);
+            color: #a0c0e0;
+        }
+
+        .keys-row button.app:active {
+            background: linear-gradient(145deg, rgba(245, 158, 11, 0.9) 0%, rgba(217, 119, 6, 0.9) 100%);
+            border-color: rgba(245, 158, 11, 0.8);
+            color: #000;
         }
 
         /* 方向键 - 放大 */
         .keys-row button.arrow-key {
-            font-size: 16px;
+            font-size: 18px;
             font-weight: 700;
-            padding: 14px 18px;
-            min-width: 50px;
-            background: linear-gradient(135deg, #4a4a55 0%, #3f3f4a 100%);
-            border-color: #5a5a65;
+            padding: 16px 20px;
+            min-width: 56px;
+            background: linear-gradient(145deg, rgba(74, 74, 85, 0.95) 0%, rgba(63, 63, 74, 0.95) 100%);
+            border: 1px solid rgba(100, 100, 115, 0.7);
+            color: #e0e0e0;
+            box-shadow:
+                0 3px 10px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .keys-row button.arrow-key:hover {
+            background: linear-gradient(145deg, rgba(90, 90, 105, 0.95) 0%, rgba(78, 78, 90, 0.95) 100%);
+            border-color: rgba(120, 120, 135, 0.9);
+        }
+
+        .keys-row button.arrow-key:active {
+            background: linear-gradient(145deg, rgba(74, 222, 128, 0.9) 0%, rgba(34, 197, 94, 0.9) 100%);
+            border-color: rgba(74, 222, 128, 0.8);
+            color: #000;
         }
 
         /* tmux 前缀键 */
         .keys-row button.tmux-prefix {
-            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
-            border-color: #2563eb;
+            background: linear-gradient(145deg, rgba(96, 165, 250, 0.95) 0%, rgba(59, 130, 246, 0.95) 100%);
+            border: 1px solid rgba(37, 99, 235, 0.8);
             color: #fff;
             font-weight: 600;
+            box-shadow:
+                0 3px 10px rgba(59, 130, 246, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .keys-row button.tmux-prefix:hover {
+            background: linear-gradient(145deg, rgba(96, 165, 250, 1) 0%, rgba(37, 99, 235, 1) 100%);
+            box-shadow:
+                0 4px 14px rgba(59, 130, 246, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+
+        .keys-row button.tmux-prefix:active {
+            background: linear-gradient(145deg, rgba(139, 92, 246, 0.9) 0%, rgba(124, 58, 237, 0.9) 100%);
+            border-color: rgba(139, 92, 246, 0.8);
+            transform: scale(0.95);
         }
 
         /* 第二排快捷键 */
         .keys-row-secondary {
-            border-top: 1px solid #2a2a30;
+            background: linear-gradient(180deg, rgba(22, 22, 26, 0.98) 0%, rgba(18, 18, 22, 0.98) 100%);
+            border-top: 1px solid rgba(74, 222, 128, 0.08);
+        }
+
+        .keys-row-tmux {
+            background: linear-gradient(180deg, rgba(20, 20, 24, 0.98) 0%, rgba(16, 16, 20, 0.98) 100%);
+            border-top: 1px solid rgba(74, 222, 128, 0.08);
+        }
+
+        /* 扩展键盘模式 */
+        .keyboard-expanded .keys-row-tmux {
+            display: flex;
+        }
+
+        .keys-row-tmux {
+            display: none;
+        }
+
+        @media (max-width: 480px) {
+            .keys-row-tmux {
+                display: flex;
+            }
+        }
+
+        /* 悬浮扩展按钮 (FAB) */
+        /* FAB 按钮 - 现代化设计 */
+        .fab-expand {
+            position: fixed;
+            right: 16px;
+            bottom: 160px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, rgba(74, 222, 128, 0.95) 0%, rgba(34, 197, 94, 0.95) 100%);
+            color: #000;
+            border: 2px solid rgba(74, 222, 128, 0.5);
+            font-size: 24px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow:
+                0 8px 32px rgba(74, 222, 128, 0.4),
+                0 4px 16px rgba(0, 0, 0, 0.3),
+                inset 0 2px 4px rgba(255, 255, 255, 0.2),
+                inset 0 -2px 4px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            -webkit-tap-highlight-color: transparent;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .fab-expand:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow:
+                0 12px 40px rgba(74, 222, 128, 0.5),
+                0 6px 20px rgba(0, 0, 0, 0.4),
+                inset 0 2px 4px rgba(255, 255, 255, 0.3);
+        }
+
+        .fab-expand:active {
+            transform: translateY(0) scale(0.95);
+            box-shadow:
+                0 4px 16px rgba(74, 222, 128, 0.3),
+                0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .fab-expand.expanded {
+            background: linear-gradient(145deg, rgba(239, 68, 68, 0.95) 0%, rgba(220, 38, 38, 0.95) 100%);
+            border-color: rgba(239, 68, 68, 0.5);
+            color: #fff;
+            box-shadow:
+                0 8px 32px rgba(239, 68, 68, 0.4),
+                0 4px 16px rgba(0, 0, 0, 0.3),
+                inset 0 2px 4px rgba(255, 255, 255, 0.2);
+        }
+
+        .fab-expand.dragging {
+            opacity: 0.9;
+            transform: scale(1.1);
+            cursor: grabbing;
+            transition: none;
+            box-shadow:
+                0 16px 48px rgba(74, 222, 128, 0.5),
+                0 8px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        /* 键盘图例按钮 - 现代化设计 */
+        .kb-legend-btn {
+            position: fixed;
+            right: 16px;
+            bottom: 100px;
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, rgba(59, 130, 246, 0.95) 0%, rgba(37, 99, 235, 0.95) 100%);
+            color: #fff;
+            border: 2px solid rgba(59, 130, 246, 0.5);
+            font-size: 22px;
+            cursor: pointer;
+            box-shadow:
+                0 6px 24px rgba(59, 130, 246, 0.4),
+                0 3px 12px rgba(0, 0, 0, 0.3),
+                inset 0 2px 4px rgba(255, 255, 255, 0.2),
+                inset 0 -2px 4px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            -webkit-tap-highlight-color: transparent;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .kb-legend-btn:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow:
+                0 10px 32px rgba(59, 130, 246, 0.5),
+                0 5px 16px rgba(0, 0, 0, 0.4);
+        }
+
+        .kb-legend-btn:active {
+            transform: translateY(0) scale(0.95);
+            box-shadow:
+                0 4px 16px rgba(59, 130, 246, 0.3),
+                0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .kb-legend-btn.active {
+            background: linear-gradient(145deg, rgba(245, 158, 11, 0.95) 0%, rgba(217, 119, 6, 0.95) 100%);
+            border-color: rgba(245, 158, 11, 0.5);
+            box-shadow:
+                0 6px 24px rgba(245, 158, 11, 0.4),
+                0 3px 12px rgba(0, 0, 0, 0.3),
+                inset 0 2px 4px rgba(255, 255, 255, 0.2);
+        }
+
+        /* 浮动按钮容器 */
+        .fab-container {
+            position: fixed;
+            right: 0;
+            bottom: 80px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 16px;
+            pointer-events: none;
+        }
+
+        .fab-container > * {
+            pointer-events: auto;
         }
 
         /* 连接提示 */
@@ -313,43 +1306,49 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0,0,0,0.8);
+            background: linear-gradient(180deg, rgba(10, 10, 15, 0.98) 0%, rgba(15, 15, 25, 0.98) 100%);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 100;
-            backdrop-filter: blur(5px);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
         }
-        
+
         .connect-overlay.hidden {
             display: none;
         }
 
         /* Toast 提示 */
         .toast {
-            background: rgba(30, 30, 40, 0.95);
-            border: 1px solid #3a3a45;
-            border-radius: 10px;
-            padding: 12px 16px;
-            margin-bottom: 10px;
+            background: linear-gradient(145deg, rgba(30, 30, 45, 0.98) 0%, rgba(25, 25, 35, 0.98) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 14px 18px;
+            margin-bottom: 12px;
             display: flex;
             align-items: center;
-            gap: 10px;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.5);
-            backdrop-filter: blur(10px);
-            animation: slideDown 0.3s ease;
+            gap: 12px;
+            box-shadow:
+                0 12px 40px rgba(0, 0, 0, 0.6),
+                0 4px 12px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            animation: slideDown 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             max-width: 100%;
+            min-width: 200px;
         }
 
         .toast.toast-hidden {
             animation: slideUp 0.3s ease forwards;
         }
 
-        .toast-success { border-left: 4px solid #4ade80; }
-        .toast-error { border-left: 4px solid #ff5555; }
-        .toast-warning { border-left: 4px solid #f1fa8c; }
-        .toast-info { border-left: 4px solid #69a5f7; }
+        .toast-success { border-left: 4px solid #4ade80; background: linear-gradient(145deg, rgba(74, 222, 128, 0.15), rgba(25, 35, 30, 0.98)); }
+        .toast-error { border-left: 4px solid #ef4444; background: linear-gradient(145deg, rgba(239, 68, 68, 0.15), rgba(35, 25, 25, 0.98)); }
+        .toast-warning { border-left: 4px solid #f59e0b; background: linear-gradient(145deg, rgba(245, 158, 11, 0.15), rgba(35, 32, 25, 0.98)); }
+        .toast-info { border-left: 4px solid #3b82f6; background: linear-gradient(145deg, rgba(59, 130, 246, 0.15), rgba(25, 28, 35, 0.98)); }
 
         .toast-icon {
             font-size: 18px;
@@ -386,13 +1385,17 @@
         }
 
         .spinner {
-            width: 50px;
-            height: 50px;
-            border: 4px solid #333;
+            width: 56px;
+            height: 56px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
             border-top-color: #4ade80;
+            border-right-color: rgba(74, 222, 128, 0.6);
             border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
+            animation: spin 1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+            margin-bottom: 24px;
+            box-shadow:
+                0 0 20px rgba(74, 222, 128, 0.3),
+                inset 0 0 10px rgba(74, 222, 128, 0.1);
         }
         
         @keyframes spin {
@@ -400,9 +1403,11 @@
         }
         
         .connect-text {
-            color: #888;
-            font-size: 14px;
-            margin-top: 15px;
+            color: #a0a0a8;
+            font-size: 15px;
+            margin-top: 16px;
+            font-weight: 500;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
         }
 
         /* Token 输入区域 */
@@ -419,41 +1424,64 @@
         }
 
         .token-input {
-            background: #1a1a2e;
-            border: 1px solid #3a3a45;
-            border-radius: 8px;
-            padding: 12px 16px;
+            background: linear-gradient(145deg, rgba(26, 26, 46, 0.95) 0%, rgba(20, 20, 35, 0.95) 100%);
+            border: 2px solid rgba(74, 222, 128, 0.3);
+            border-radius: 12px;
+            padding: 14px 18px;
             color: #fff;
             font-size: 16px;
             width: 280px;
             text-align: center;
             outline: none;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow:
+                0 4px 12px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .token-input:hover {
+            border-color: rgba(74, 222, 128, 0.5);
+            box-shadow:
+                0 6px 20px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }
 
         .token-input:focus {
-            border-color: #4ade80;
-            box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.2);
+            border-color: rgba(74, 222, 128, 0.8);
+            box-shadow:
+                0 0 0 4px rgba(74, 222, 128, 0.2),
+                0 6px 24px rgba(74, 222, 128, 0.15);
+            background: linear-gradient(145deg, rgba(30, 30, 50, 0.98) 0%, rgba(24, 24, 40, 0.98) 100%);
         }
 
         .token-btn {
-            background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
-            border: none;
-            border-radius: 8px;
-            padding: 12px 32px;
+            background: linear-gradient(145deg, rgba(74, 222, 128, 0.95) 0%, rgba(34, 197, 94, 0.95) 100%);
+            border: 2px solid rgba(74, 222, 128, 0.5);
+            border-radius: 12px;
+            padding: 14px 36px;
             color: #0c0c0c;
             font-size: 15px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow:
+                0 4px 12px rgba(74, 222, 128, 0.3),
+                0 2px 6px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
         }
 
         .token-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(74, 222, 128, 0.3);
+            transform: translateY(-2px);
+            box-shadow:
+                0 6px 20px rgba(74, 222, 128, 0.4),
+                0 3px 10px rgba(0, 0, 0, 0.3);
         }
 
         .token-btn:active {
-            transform: translateY(0);
+            transform: translateY(0) scale(0.98);
+            box-shadow:
+                0 2px 8px rgba(74, 222, 128, 0.2),
+                0 1px 4px rgba(0, 0, 0, 0.2);
         }
 
         .token-error {
@@ -483,15 +1511,32 @@
                 padding: 9px 10px;
             }
 
-            /* 会话列表面板移动端优化 */
+            /* 会话列表面板移动端优化 - 改为底部抽屉式 */
             #sessionPanel {
-                top: 50px !important;
-                right: 10px !important;
-                left: 10px !important;
-                max-height: 50vh !important;
+                position: fixed !important;
+                top: auto !important;
+                bottom: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                max-height: 70vh !important;
                 min-width: auto !important;
-                width: calc(100vw - 20px) !important;
-                border-radius: 12px !important;
+                border-radius: 16px 16px 0 0 !important;
+                margin: 0 !important;
+                transform: translateY(0);
+                animation: slideUp 0.3s ease-out;
+            }
+
+            @keyframes slideUp {
+                from { transform: translateY(100%); }
+                to { transform: translateY(0); }
+            }
+
+            /* 会话项优化 */
+            #sessionList > div {
+                min-height: 44px !important;
+                padding: 10px 15px !important;
             }
         }
         
@@ -509,108 +1554,348 @@
                 padding: 6px;
             }
         }
+
+        /* ==================== 会话选择器样式 (PRD F-003) ==================== */
+        .session-selector {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(145deg, #1a1a20 0%, #16161a 100%);
+            display: flex;
+            flex-direction: column;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        .selector-header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .selector-header h2 {
+            color: #e5e5e5;
+            font-size: 20px;
+            margin: 0 0 8px 0;
+        }
+
+        .selector-header p {
+            color: #888;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .selector-header span {
+            color: #4ade80;
+        }
+
+        .selector-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            max-width: 600px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .selector-section {
+            background: linear-gradient(145deg, #24242a 0%, #202025 100%);
+            border: 1px solid #2a2a30;
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .selector-section h3 {
+            color: #b0b0b0;
+            font-size: 14px;
+            margin: 0 0 12px 0;
+            font-weight: 500;
+        }
+
+        .available-sessions {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .session-option {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: rgba(45, 45, 52, 0.5);
+            border: 1px solid #333;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .session-option:hover {
+            background: rgba(74, 222, 128, 0.1);
+            border-color: rgba(74, 222, 128, 0.3);
+        }
+
+        .session-option-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .session-option-name {
+            color: #e5e5e5;
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        .session-option-meta {
+            color: #666;
+            font-size: 12px;
+        }
+
+        .session-option-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+        }
+
+        .session-option-status.online {
+            color: #4ade80;
+        }
+
+        .session-option-status.offline {
+            color: #888;
+        }
+
+        .empty-sessions {
+            text-align: center;
+            color: #666;
+            padding: 24px;
+            font-size: 14px;
+        }
+
+        .create-session-form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .session-name-input {
+            background: linear-gradient(145deg, #2d2d34 0%, #28282f 100%);
+            border: 1px solid #3a3a40;
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: #e5e5e5;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .session-name-input:focus {
+            border-color: rgba(74, 222, 128, 0.5);
+            box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.1);
+        }
+
+        .session-name-input::placeholder {
+            color: #666;
+        }
+
+        .selector-actions {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #2a2a30;
+        }
+
+        .snapshot-btn.skip {
+            background: transparent;
+            border: 1px solid #444;
+            color: #888;
+        }
+
+        .snapshot-btn.skip:hover {
+            border-color: #666;
+            color: #aaa;
+        }
+
+        .snapshot-btn.create {
+            background: linear-gradient(145deg, rgba(74, 222, 128, 0.9) 0%, rgba(34, 197, 94, 0.9) 100%);
+            border-color: rgba(74, 222, 128, 0.5);
+        }
+
+        .snapshot-btn.create:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(74, 222, 128, 0.3);
+        }
     </style>
 </head>
 <body>
-    <!-- 顶部状态栏 -->
-    <div class="header">
-        <h1>🦞 tmux-web-term</h1>
-        <div class="status">
-            <div class="status-dot" id="statusDot"></div>
-            <div class="status-meta">
-                <span id="statusText">连接中</span>
-                <span id="modeIndicator" class="mode-indicator">🟢 PTY 模式</span>
-                <span id="sessionIndicator" class="status-pill">ws1</span>
-                <span id="presenceIndicator" class="status-pill">👥 0 在线</span>
+    <!-- 主布局容器 -->
+    <div class="main-layout">
+        <!-- 左侧边栏 - 标签页列表 -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <span class="sidebar-title">标签页</span>
+                <button class="sidebar-close" onclick="toggleSidebar()">×</button>
+            </div>
+            <div class="session-list-container" id="sessionListContainer">
+                <!-- 标签页列表项将动态插入 -->
+            </div>
+            <div class="sidebar-footer">
+                <button class="new-session-btn" onclick="createNewTab()">
+                    <span>+</span> 新建标签页
+                </button>
             </div>
         </div>
-        <div style="display:flex;gap:6px;">
-            <button class="session-btn" id="recordBtn" onclick="toggleRecording()" title="录制控制" style="padding:4px 8px;">⏺</button>
-            <button class="session-btn" id="fileTransferBtn" onclick="toggleFileTransfer()" title="文件传输" style="padding:4px 8px;">📁</button>
-            <button class="session-btn" id="sessionBtn" onclick="toggleSessionList()">会话</button>
-        </div>
-    </div>
 
-    <!-- 文件传输面板 -->
-    <div id="fileTransferPanel" style="display:none;position:fixed;top:60px;right:10px;background:#1a1a1e;border:1px solid #333;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,0.5);z-index:1000;padding:15px;min-width:250px;">
-        <div style="padding-bottom:10px;border-bottom:1px solid #333;display:flex;justify-content:space-between;align-items:center;">
-            <span style="font-size:13px;font-weight:600;color:#fff;">文件传输 (rz/sz)</span>
-            <button onclick="document.getElementById('fileTransferPanel').style.display='none'" style="background:transparent;border:none;color:#888;cursor:pointer;font-size:16px;">×</button>
-        </div>
-        <div style="padding:15px 0;">
-            <p style="color:#888;font-size:12px;margin-bottom:10px;">使用 rz/sz 命令传输文件：</p>
-            <div style="display:flex;flex-direction:column;gap:8px;">
-                <button onclick="sendRzCommand()" style="background:linear-gradient(135deg,#4ade80,#22c55e);color:#000;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;">⬆️ 上传 (rz)</button>
-                <button onclick="sendSzCommand()" style="background:linear-gradient(135deg,#60a5fa,#3b82f6);color:#000;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;">⬇️ 下载 (sz)</button>
+        <!-- 主内容区 -->
+        <div class="content-area">
+            <!-- 顶部状态栏 -->
+            <div class="header">
+                <button class="sidebar-toggle" onclick="toggleSidebar()" title="展开标签页列表">
+                    <span>☰</span>
+                </button>
+                <h1>tmux-web-term</h1>
+                <div class="status">
+                    <div class="status-dot" id="statusDot"></div>
+                    <div class="status-meta">
+                        <span id="statusText">连接中</span>
+                        <span id="modeIndicator" class="mode-indicator">🟢 PTY 模式</span>
+                        <span id="sessionIndicator" class="status-pill">ws1</span>
+                        <span id="presenceIndicator" class="status-pill">👥 0 在线</span>
+                    </div>
+                </div>
+                <div style="display:flex;gap:6px;align-items:center;">
+                    <button class="session-btn" id="recordBtn" onclick="toggleRecording()" title="录制控制" style="padding:4px 8px;">⏺</button>
+                    <button class="session-btn" id="fileTransferBtn" onclick="toggleFileTransfer()" title="文件传输" style="padding:4px 8px;">📁</button>
+                </div>
             </div>
-            <p style="color:#666;font-size:11px;margin-top:12px;">提示：在终端中输入 rz 或 sz 命令后，再点击对应按钮</p>
-        </div>
-    </div>
 
-    <!-- Toast 提示容器 -->
-    <div id="toastContainer" style="position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:2000;max-width:90%;width:350px;"></div>
+            <!-- 主内容显示区 -->
+            <div class="main-content" id="mainContent">
+                <!-- 状态1: 终端界面 -->
+                <div class="terminal-view" id="terminalView">
+                    <div id="terminal-container">
+                        <div id="terminal"></div>
+                        <!-- 连接中遮罩 -->
+                        <div class="connect-overlay" id="connectOverlay">
+                            <div id="connectLoading">
+                                <div class="spinner"></div>
+                                <div class="connect-text">正在连接终端...</div>
+                            </div>
+                            <div id="tokenInputArea" class="token-input-area hidden">
+                                <div class="connect-text">需要访问 Token 才能继续</div>
+                                <input type="password" id="tokenInput" class="token-input" placeholder="请输入访问 Token" autocomplete="off">
+                                <button id="tokenSubmitBtn" class="token-btn">连接</button>
+                                <div id="tokenError" class="token-error hidden"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-    <!-- 会话列表面板 -->
-    <div id="sessionPanel" style="display:none;position:fixed;top:60px;right:10px;background:#1a1a1e;border:1px solid #333;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,0.5);z-index:1000;max-height:min(350px, 60vh);overflow-y:auto;min-width:220px;max-width:calc(100vw - 20px);">
-        <div style="padding:12px 15px;border-bottom:1px solid #333;display:flex;justify-content:space-between;align-items:center;">
-            <span style="font-size:12px;color:#888;">会话列表</span>
-            <button onclick="refreshSessions()" style="background:#2a2a35;color:#4ade80;border:1px solid #4ade80;border-radius:6px;padding:2px 8px;font-size:11px;cursor:pointer;" title="刷新列表">↻</button>
-        </div>
-        <div id="sessionList"></div>
-        <div style="padding:10px 15px;border-top:1px solid #333;">
-            <button onclick="createNewSession()" style="width:100%;background:linear-gradient(135deg,#4ade80,#22c55e);color:#000;border:none;border-radius:8px;padding:8px;font-size:13px;font-weight:600;cursor:pointer;">+ 新建会话</button>
-        </div>
-    </div>
-    
-    <!-- 终端容器 -->
-    <div id="terminal-container">
-        <div id="terminal"></div>
-        <!-- 连接中遮罩 -->
-        <div class="connect-overlay" id="connectOverlay">
-            <!-- 连接中显示的内容 -->
-            <div id="connectLoading">
-                <div class="spinner"></div>
-                <div class="connect-text">正在连接终端...</div>
+                <!-- 状态3: 会话选择器 (PRD F-003) -->
+                <div class="session-selector" id="sessionSelector" style="display:none;">
+                    <div class="selector-header">
+                        <h2>选择或创建 tmux 会话</h2>
+                        <p>当前标签页: <span id="selectorTabName">--</span></p>
+                    </div>
+
+                    <div class="selector-content">
+                        <div class="selector-section">
+                            <h3>可用会话</h3>
+                            <div class="available-sessions" id="availableSessions">
+                                <!-- 会话列表将动态插入 -->
+                                <div class="empty-sessions">暂无可用会话</div>
+                            </div>
+                        </div>
+
+                        <div class="selector-section create-section">
+                            <h3>创建新会话</h3>
+                            <div class="create-session-form">
+                                <input type="text" id="newSessionName" class="session-name-input" placeholder="输入会话名称（字母、数字、下划线、连字符）" maxlength="50">
+                                <button class="snapshot-btn create" onclick="createTmuxSession()">
+                                    <span>+</span> 创建并连接
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="selector-actions">
+                        <button class="snapshot-btn skip" onclick="skipSessionSelection()">
+                            暂时不连接
+                        </button>
+                    </div>
+                </div>
             </div>
-            <!-- Token 输入区域（初始隐藏） -->
-            <div id="tokenInputArea" class="token-input-area hidden">
-                <div class="connect-text">需要访问 Token 才能继续</div>
-                <input type="password" id="tokenInput" class="token-input" placeholder="请输入访问 Token" autocomplete="off">
-                <button id="tokenSubmitBtn" class="token-btn">连接</button>
-                <div id="tokenError" class="token-error hidden"></div>
+
+            <!-- 底部固定操作栏 -->
+            <div class="bottom-bar" id="bottomBar">
+                <button class="bottom-btn" id="bottomKeyboardBtn" onclick="toggleKeyboardVisibility()" title="显示/隐藏键盘">
+                    <span>⌨️</span>
+                    <label>键盘</label>
+                </button>
+                <button class="bottom-btn" id="bottomFullscreenBtn" onclick="toggleFullscreen()" title="全屏模式">
+                    <span>⛶</span>
+                    <label>全屏</label>
+                </button>
+                <button class="bottom-btn" id="bottomSystemKbBtn" onclick="toggleSystemKeyboard()" title="系统键盘">
+                    <span>🔤</span>
+                    <label>系统键盘</label>
+                </button>
+                <button class="bottom-btn" onclick="showGestureHelp()" title="手势说明">
+                    <span>👆</span>
+                    <label>帮助</label>
+                </button>
+                <button class="bottom-btn" onclick="createNewTab()" title="新建标签页">
+                    <span>+</span>
+                    <label>新标签页</label>
+                </button>
             </div>
-        </div>
-    </div>
-    
-    <!-- 虚拟键盘区域 -->
-    <div class="keyboard-area">
-        <!-- 输入框行 -->
-        <div class="input-row">
-            <input type="text" id="commandInput" placeholder="输入命令..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-            <button class="send-btn" id="sendBtn">发送</button>
-        </div>
 
-        <!-- 第一排：Ctrl 键 + tmux 前缀 -->
-        <div class="keys-row">
-            <button onclick="sendKey('\x03')" class="control">Ctrl+C</button>
-            <button onclick="sendKey('\x04')" class="control">Ctrl+D</button>
-            <button onclick="sendKey('\x1a')" class="control">Ctrl+Z</button>
-            <button onclick="sendKey('\x02')" class="tmux-prefix">Ctrl+B</button>
-            <button onclick="sendKey('\t')">Tab</button>
-            <button onclick="sendKey('\x1b')">Esc</button>
-            <button onclick="sendInput('clear\n')" class="app">clear</button>
-        </div>
+            <!-- 虚拟键盘区域 -->
+            <div class="keyboard-area" id="keyboard">
+                <!-- 输入框行 -->
+                <div class="input-row">
+                    <input type="text" id="commandInput" placeholder="输入命令（点击 🔤 打开系统键盘）..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" inputmode="none" readonly>
+                    <button class="send-btn" id="sendBtn">发送</button>
+                </div>
 
-        <!-- 第二排：方向键（放大） -->
-        <div class="keys-row keys-row-secondary">
-            <button onclick="sendKey('\x1b[D')" class="arrow-key">←</button>
-            <button onclick="sendKey('\x1b[A')" class="arrow-key">↑</button>
-            <button onclick="sendKey('\x1b[B')" class="arrow-key">↓</button>
-            <button onclick="sendKey('\x1b[C')" class="arrow-key">→</button>
-            <button onclick="sendInput('ls -la\n')" class="app">ls</button>
-            <button onclick="sendInput('cd ..\n')" class="app">cd..</button>
-            <button onclick="sendInput('vim\n')" class="app">vim</button>
-            <button onclick="sendInput('htop\n')" class="app">htop</button>
+                <!-- 第一排：Ctrl 键 + tmux 前缀 -->
+                <div class="keys-row">
+                    <button onclick="sendKey('\x03')" class="control">Ctrl+C</button>
+                    <button onclick="sendKey('\x04')" class="control">Ctrl+D</button>
+                    <button onclick="sendKey('\x1a')" class="control">Ctrl+Z</button>
+                    <button onclick="sendKey('\x02')" class="tmux-prefix">Ctrl+B</button>
+                    <button onclick="sendKey('\t')">Tab</button>
+                    <button onclick="sendKey('\x1b')">Esc</button>
+                    <button onclick="sendInput('clear\n')" class="app">clear</button>
+                </div>
+
+                <!-- 第二排：方向键 -->
+                <div class="keys-row keys-row-secondary">
+                    <button onclick="sendKey('\x1b[D')" class="arrow-key">←</button>
+                    <button onclick="sendKey('\x1b[A')" class="arrow-key">↑</button>
+                    <button onclick="sendKey('\x1b[B')" class="arrow-key">↓</button>
+                    <button onclick="sendKey('\x1b[C')" class="arrow-key">→</button>
+                    <button onclick="sendInput('ls -la\n')" class="app">ls</button>
+                    <button onclick="sendInput('cd ..\n')" class="app">cd..</button>
+                    <button onclick="sendInput('vim\n')" class="app">vim</button>
+                    <button onclick="sendInput('htop\n')" class="app">htop</button>
+                </div>
+
+                <!-- 第三排：tmux 快捷键 -->
+                <div class="keys-row keys-row-tmux">
+                    <button onclick="sendKey('\x02s')" class="tmux-prefix" title="切换会话">Ctrl+B S</button>
+                    <button onclick="sendKey('\x02%')" class="tmux-prefix" title="垂直分屏">垂直分屏</button>
+                    <button onclick="sendKey('\x02\x22')" class="tmux-prefix" title="水平分屏">水平分屏</button>
+                    <button onclick="sendKey('\x02x')" class="tmux-prefix" title="关闭窗格">关闭窗格</button>
+                    <button onclick="toggleFullscreen()" class="control">全屏</button>
+                </div>
+            </div>
         </div>
     </div>
     
@@ -674,13 +1959,655 @@
         const MAX_RECONNECT_DELAY = 30000;     // 最大延迟 30 秒
         const RECONNECT_BACKOFF_MULTIPLIER = 2; // 退避倍率
 
+        // ==================== 多标签页工作区管理 ====================
+        // PRD F-001: 标签页与会话概念分离
+        // 标签页状态: 'empty' | 'connecting' | 'connected' | 'disconnected'
+        let tabs = [];              // 标签页列表（浏览器端工作空间）
+        let currentTab = null;      // 当前活动标签页
+        let tmuxSessions = [];      // 服务器端tmux会话列表
+        let sidebarVisible = false;
+        let terminalBuffer = [];    // 存储终端输出行用于快照
+        const MAX_SNAPSHOT_LINES = 50;
+        const TABS_STORAGE_KEY = 'tmux_tabs_v3';
+        const TMUX_SESSIONS_STORAGE_KEY = 'tmux_sessions_list_v3';
+        const LEGACY_SESSIONS_KEY = 'tmux_sessions_v2';
+
+        // 初始化多标签页系统
+        function initWorkspaceSystem() {
+            // PRD F-006: 首先尝试数据迁移
+            migrateLegacyData();
+
+            loadTabsFromStorage();
+
+            // 如果没有标签页，创建一个默认标签页
+            if (tabs.length === 0) {
+                const defaultTab = {
+                    id: generateTabId(),
+                    name: '标签页 1',
+                    sessionName: DEFAULT_SESSION,
+                    status: 'disconnected',
+                    snapshot: '',
+                    terminalBuffer: [],
+                    createdAt: Date.now(),
+                    lastActivity: Date.now()
+                };
+                tabs.push(defaultTab);
+                currentTab = defaultTab;
+                saveTabsToStorage();
+            }
+
+            renderTabList();
+            updateTabUI();
+
+            // 初始化终端缓冲区捕获
+            initTerminalBufferCapture();
+        }
+
+        // PRD F-006: 数据迁移 - 从v2格式迁移到v3格式
+        function migrateLegacyData() {
+            try {
+                const legacyData = localStorage.getItem(LEGACY_SESSIONS_KEY);
+                if (!legacyData) return;
+
+                const legacySessions = JSON.parse(legacyData);
+                if (!Array.isArray(legacySessions) || legacySessions.length === 0) return;
+
+                console.log('[Migration] 发现v2数据，开始迁移...');
+
+                // 将旧session数据转换为新的tab格式
+                const migratedTabs = legacySessions.map((s, index) => ({
+                    id: s.id || generateTabId(),
+                    name: `标签页 ${index + 1}`,
+                    sessionName: s.name || DEFAULT_SESSION,
+                    status: s.status === 'online' ? 'connected' : 'disconnected',
+                    snapshot: s.snapshot || '',
+                    terminalBuffer: s.terminalBuffer || [],
+                    createdAt: s.lastConnected || Date.now(),
+                    lastActivity: s.lastActivity || Date.now()
+                }));
+
+                // 提取唯一的tmux会话列表
+                const uniqueSessionNames = [...new Set(legacySessions.map(s => s.name).filter(Boolean))];
+                const migratedSessions = uniqueSessionNames.map(name => ({
+                    name: name,
+                    isActive: true,
+                    attachedClients: 0,
+                    lastActivity: Date.now()
+                }));
+
+                // 保存到新存储
+                localStorage.setItem(TABS_STORAGE_KEY, JSON.stringify(migratedTabs));
+                localStorage.setItem(TMUX_SESSIONS_STORAGE_KEY, JSON.stringify(migratedSessions));
+
+                // 删除旧数据
+                localStorage.removeItem(LEGACY_SESSIONS_KEY);
+
+                console.log('[Migration] 迁移完成:', migratedTabs.length, '个标签页,', migratedSessions.length, '个会话');
+            } catch (e) {
+                console.error('[Migration] 数据迁移失败:', e);
+            }
+        }
+
+        // 生成唯一标签页ID
+        function generateTabId() {
+            return 'tab_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        // 从localStorage加载标签页
+        function loadTabsFromStorage() {
+            try {
+                const stored = localStorage.getItem(TABS_STORAGE_KEY);
+                if (stored) {
+                    tabs = JSON.parse(stored);
+                    // 找到最后活跃的标签页作为当前标签页
+                    const lastActive = tabs.find(t => t.lastActivity);
+                    if (lastActive) {
+                        currentTab = lastActive;
+                    } else if (tabs.length > 0) {
+                        currentTab = tabs[0];
+                    }
+                }
+
+                // 加载tmux会话列表
+                const sessionsStored = localStorage.getItem(TMUX_SESSIONS_STORAGE_KEY);
+                if (sessionsStored) {
+                    tmuxSessions = JSON.parse(sessionsStored);
+                }
+            } catch (e) {
+                console.error('[Workspace] 加载标签页失败:', e);
+                tabs = [];
+                tmuxSessions = [];
+            }
+        }
+
+        // 保存标签页到localStorage
+        function saveTabsToStorage() {
+            try {
+                localStorage.setItem(TABS_STORAGE_KEY, JSON.stringify(tabs));
+                localStorage.setItem(TMUX_SESSIONS_STORAGE_KEY, JSON.stringify(tmuxSessions));
+            } catch (e) {
+                console.error('[Workspace] 保存标签页失败:', e);
+            }
+        }
+
+        // 初始化终端缓冲区捕获
+        function initTerminalBufferCapture() {
+            // 注意：终端输出缓冲区在WebSocket onmessage中捕获
+            // 这里不需要额外监听，因为WebSocket数据直接写入终端
+            console.log('[Workspace] 终端缓冲区捕获已初始化');
+        }
+
+        // 处理终端输出并添加到缓冲区（保存到当前标签页的缓冲区）
+        function processTerminalOutput(data) {
+            if (!currentTab || !data) return;
+
+            // 将数据转换为字符串
+            let text = '';
+            if (data instanceof ArrayBuffer) {
+                text = new TextDecoder().decode(data);
+            } else if (typeof data === 'string') {
+                text = data;
+            }
+
+            // 将数据添加到当前标签页的缓冲区
+            if (!currentTab.terminalBuffer) {
+                currentTab.terminalBuffer = [];
+            }
+
+            const lines = text.split('\n');
+            lines.forEach(line => {
+                if (line.trim()) {
+                    currentTab.terminalBuffer.push(line);
+                }
+            });
+
+            // 保持缓冲区大小
+            if (currentTab.terminalBuffer.length > MAX_SNAPSHOT_LINES) {
+                currentTab.terminalBuffer = currentTab.terminalBuffer.slice(-MAX_SNAPSHOT_LINES);
+            }
+        }
+
+        // 捕获当前终端快照
+        function captureSnapshot() {
+            if (!currentTab) return;
+
+            // 从标签页的缓冲区生成快照
+            const buffer = currentTab.terminalBuffer || [];
+            if (buffer.length === 0) return;
+
+            currentTab.snapshot = buffer.join('\n');
+            currentTab.lastActivity = Date.now();
+            saveTabsToStorage();
+
+            console.log('[Workspace] 快照已捕获:', currentTab.name);
+        }
+
+        // 加载标签页的缓冲区（切换标签页时调用）
+        function loadTabBuffer(tabId) {
+            const tab = tabs.find(t => t.id === tabId);
+            if (tab) {
+                // 初始化标签页的缓冲区（如果不存在）
+                if (!tab.terminalBuffer) {
+                    tab.terminalBuffer = [];
+                }
+                // 如果有快照，加载到缓冲区
+                if (tab.snapshot) {
+                    tab.terminalBuffer = tab.snapshot.split('\n').slice(-MAX_SNAPSHOT_LINES);
+                }
+            }
+        }
+
+        // 切换侧边栏显示
+        function toggleSidebar() {
+            sidebarVisible = !sidebarVisible;
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+
+            if (sidebar) {
+                sidebar.classList.toggle('collapsed', !sidebarVisible);
+            }
+            if (overlay) {
+                overlay.classList.toggle('visible', sidebarVisible);
+            }
+
+            // 重新渲染标签页列表
+            if (sidebarVisible) {
+                renderTabList();
+            }
+        }
+
+        // 渲染标签页列表到侧边栏
+        function renderTabList() {
+            const container = document.getElementById('sessionListContainer');
+            if (!container) return;
+
+            container.innerHTML = '';
+
+            if (tabs.length === 0) {
+                container.innerHTML = '<div style="padding:20px;text-align:center;color:#888;font-size:13px;">暂无标签页<br>点击"新建标签页"创建</div>';
+                return;
+            }
+
+            tabs.forEach(tab => {
+                const item = document.createElement('div');
+                item.className = 'session-item' + (tab.id === currentTab?.id ? ' active' : '');
+                item.onclick = () => selectTab(tab.id);
+
+                // 状态指示器
+                let statusClass = 'offline';
+                let statusText = '未连接';
+                if (tab.status === 'connected') {
+                    statusClass = 'online';
+                    statusText = '已连接';
+                } else if (tab.status === 'connecting') {
+                    statusClass = 'connecting';
+                    statusText = '连接中';
+                } else if (tab.status === 'empty') {
+                    statusClass = 'offline';
+                    statusText = '未关联';
+                }
+
+                // 最后活动时间
+                let timeText = '';
+                if (tab.lastActivity) {
+                    const diff = Date.now() - tab.lastActivity;
+                    if (diff < 60000) {
+                        timeText = '刚刚';
+                    } else if (diff < 3600000) {
+                        timeText = Math.floor(diff / 60000) + '分钟前';
+                    } else {
+                        timeText = Math.floor(diff / 3600000) + '小时前';
+                    }
+                }
+
+                // 显示关联的tmux会话名
+                const sessionInfo = tab.sessionName ? `(${tab.sessionName})` : '';
+
+                item.innerHTML = `
+                    <div class="session-item-icon">${tab.status === 'connected' ? '▶' : '○'}</div>
+                    <div class="session-item-info">
+                        <div class="session-item-name">${escapeHtml(tab.name)} ${sessionInfo}</div>
+                        <div class="session-item-meta">
+                            <span class="session-item-status ${statusClass}">${statusText}</span>
+                            ${timeText ? `<span class="session-item-time">${timeText}</span>` : ''}
+                        </div>
+                    </div>
+                `;
+
+                container.appendChild(item);
+            });
+        }
+
+        // HTML转义
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 选择标签页（点击侧边栏项）
+        function selectTab(tabId) {
+            const tab = tabs.find(t => t.id === tabId);
+            if (!tab || tab.id === currentTab?.id) return;
+
+            // 先捕获当前标签页的快照
+            if (currentTab && currentTab.status === 'connected') {
+                captureSnapshot();
+                currentTab.status = 'disconnected';
+            }
+
+            currentTab = tab;
+            saveTabsToStorage();
+
+            // 加载新标签页的缓冲区
+            loadTabBuffer(tab.id);
+
+            // 更新UI
+            updateTabUI();
+            renderTabList();
+
+            // 根据标签页状态显示不同视图
+            if (tab.status === 'connected' || tab.status === 'connecting') {
+                showTerminalView();
+            } else if (tab.status === 'empty' || tab.status === 'disconnected') {
+                showSessionSelector();
+            }
+
+            // 如果是已连接状态，确保WebSocket连接到正确会话
+            if (tab.status === 'connected' && ws?.readyState === WebSocket.OPEN && tab.sessionName) {
+                try {
+                    ws.send(JSON.stringify({ type: 'switch', session: tab.sessionName }));
+                } catch (e) {
+                    console.error('[Tab] 切换会话失败:', e);
+                    // 尝试重新连接
+                    reconnectAttempts = 0;
+                    connect();
+                }
+            }
+        }
+
+        // 显示终端视图
+        function showTerminalView() {
+            const terminalView = document.getElementById('terminal');
+            const snapshotView = document.getElementById('snapshotView');
+
+            if (terminalView) terminalView.style.display = 'block';
+            if (snapshotView) snapshotView.style.display = 'none';
+
+            // 确保终端正确渲染
+            setTimeout(() => {
+                fitAddon.fit();
+                term.focus();
+            }, 100);
+        }
+
+        // 显示会话选择器界面
+        function showSessionSelector() {
+            const terminalView = document.getElementById('terminalView');
+            const snapshotView = document.getElementById('snapshotView');
+            const sessionSelector = document.getElementById('sessionSelector');
+
+            if (terminalView) terminalView.style.display = 'none';
+            if (snapshotView) snapshotView.style.display = 'none';
+            if (sessionSelector) {
+                sessionSelector.style.display = 'flex';
+                updateSessionSelectorUI();
+            }
+
+            // 请求最新的会话列表
+            refreshSessions();
+        }
+
+        // 更新会话选择器UI
+        function updateSessionSelectorUI() {
+            const selectorTabName = document.getElementById('selectorTabName');
+            const availableSessions = document.getElementById('availableSessions');
+
+            if (selectorTabName && currentTab) {
+                selectorTabName.textContent = currentTab.name;
+            }
+
+            if (!availableSessions) return;
+
+            // 使用 allSessions（服务器返回的会话列表）
+            if (!allSessions || allSessions.length === 0) {
+                availableSessions.innerHTML = '<div class="empty-sessions">暂无可用会话</div>';
+                return;
+            }
+
+            availableSessions.innerHTML = '';
+            allSessions.forEach(sessionName => {
+                const option = document.createElement('div');
+                option.className = 'session-option';
+                option.onclick = () => selectSessionForTab(sessionName);
+
+                // 检查是否已连接
+                const isConnected = currentTab && currentTab.sessionName === sessionName && currentTab.status === 'connected';
+
+                option.innerHTML = `
+                    <div class="session-option-info">
+                        <span class="session-option-name">${escapeHtml(sessionName)}</span>
+                        <span class="session-option-meta">点击选择此会话</span>
+                    </div>
+                    <div class="session-option-status ${isConnected ? 'online' : 'offline'}">
+                        ${isConnected ? '● 已连接' : '○ 未连接'}
+                    </div>
+                `;
+                availableSessions.appendChild(option);
+            });
+        }
+
+        // 为当前标签页选择会话
+        function selectSessionForTab(sessionName) {
+            if (!currentTab) return;
+
+            currentTab.sessionName = sessionName;
+            currentTab.status = 'connecting';
+            saveTabsToStorage();
+
+            // 更新UI
+            renderTabList();
+            updateTabUI();
+
+            // 尝试连接
+            connectTabSession();
+        }
+
+        // 创建新的 tmux 会话 (PRD F-004)
+        function createTmuxSession() {
+            const input = document.getElementById('newSessionName');
+            const name = input?.value?.trim();
+
+            if (!name) {
+                showToast('请输入会话名称', 'warning', 2000);
+                return;
+            }
+
+            // 验证会话名格式
+            const validName = name.replace(/[^a-zA-Z0-9_-]/g, '');
+            if (!validName) {
+                showToast('会话名只能包含字母、数字、下划线和连字符', 'warning', 3000);
+                return;
+            }
+
+            // 检查是否已存在
+            if (allSessions && allSessions.includes(validName)) {
+                showToast('会话名已存在', 'warning', 2000);
+                return;
+            }
+
+            // 通过 WebSocket 发送创建请求
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'create_session',
+                    name: validName
+                }));
+                showToast('正在创建会话...', 'info', 1500);
+            } else {
+                showToast('WebSocket 未连接，无法创建会话', 'error', 3000);
+            }
+
+            // 清空输入
+            if (input) input.value = '';
+        }
+
+        // 跳过会话选择
+        function skipSessionSelection() {
+            // 保持 empty 状态，返回空视图
+            showEmptyView();
+        }
+
+        // 显示空视图（空白标签页）
+        function showEmptyView() {
+            const terminalView = document.getElementById('terminalView');
+            const snapshotView = document.getElementById('snapshotView');
+            const sessionSelector = document.getElementById('sessionSelector');
+
+            if (terminalView) terminalView.style.display = 'none';
+            if (snapshotView) snapshotView.style.display = 'none';
+            if (sessionSelector) sessionSelector.style.display = 'none';
+
+            console.log('[Tab] 显示空视图');
+        }
+
+        // 处理服务器返回的会话创建结果
+        function handleSessionCreated(data) {
+            if (data.success) {
+                showToast('会话创建成功: ' + data.name, 'success', 2000);
+
+                // 自动选择新创建的会话
+                if (currentTab) {
+                    currentTab.sessionName = data.name;
+                    currentTab.status = 'connecting';
+                    saveTabsToStorage();
+                    renderTabList();
+                    updateTabUI();
+                    connectTabSession();
+                }
+
+                // 刷新会话列表
+                refreshSessions();
+            } else {
+                showToast('会话创建失败: ' + (data.error || '未知错误'), 'error', 3000);
+            }
+        }
+
+        // 更新标签页相关的UI
+        function updateTabUI() {
+            if (!currentTab) return;
+
+            // 更新标题栏会话指示器
+            const sessionIndicator = document.getElementById('sessionIndicator');
+            if (sessionIndicator) {
+                sessionIndicator.textContent = currentTab.sessionName || currentTab.name;
+            }
+
+            // 更新侧边栏标题
+            const sidebarTitle = document.querySelector('.sidebar-title');
+            if (sidebarTitle) {
+                sidebarTitle.textContent = `标签页 (${tabs.length})`;
+            }
+        }
+
+        // 创建新标签页
+        function createNewTab() {
+            // 生成标签页名称
+            const tabNumber = tabs.length + 1;
+            const tabName = `标签页 ${tabNumber}`;
+
+            // 创建新标签页（状态为 empty，未关联会话）
+            const newTab = {
+                id: generateTabId(),
+                name: tabName,
+                sessionName: null,
+                status: 'empty',
+                snapshot: '',
+                terminalBuffer: [],
+                createdAt: Date.now(),
+                lastActivity: Date.now()
+            };
+
+            tabs.push(newTab);
+            currentTab = newTab;
+            saveTabsToStorage();
+
+            // 更新UI
+            updateTabUI();
+            renderTabList();
+            showSessionSelector();
+
+            showToast('标签页已创建: ' + tabName, 'success', 2000);
+        }
+
+        // 连接到标签页关联的会话
+        function connectTabSession() {
+            if (!currentTab || !currentTab.sessionName) return;
+
+            currentTab.status = 'connecting';
+            saveTabsToStorage();
+            renderTabList();
+            updateTabUI();
+
+            // 更新WebSocket URL中的会话参数
+            const newUrl = getWebSocketUrl();
+
+            // 如果WebSocket已连接，发送切换命令
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'switch', session: currentTab.sessionName }));
+                currentTab.status = 'connected';
+                currentTab.lastActivity = Date.now();
+                saveTabsToStorage();
+                showTerminalView();
+                showToast('已连接到会话: ' + currentTab.sessionName, 'success', 2000);
+            } else {
+                // 如果未连接，触发连接流程
+                reconnectAttempts = 0;
+                connect();
+                // 连接状态将在 ws.onopen 回调中更新
+            }
+        }
+
+        // 删除当前标签页
+        function deleteCurrentTab() {
+            if (!currentTab) return;
+
+            if (tabs.length <= 1) {
+                showToast('至少保留一个标签页', 'warning', 2000);
+                return;
+            }
+
+            if (!confirm(`确定要删除标签页 "${currentTab.name}" 吗?`)) {
+                return;
+            }
+
+            const tabId = currentTab.id;
+            const tabName = currentTab.name;
+
+            // 如果是已连接的标签页，先断开
+            if (currentTab.status === 'connected' && ws?.readyState === WebSocket.OPEN && currentTab.sessionName) {
+                ws.send(JSON.stringify({ type: 'detach', session: currentTab.sessionName }));
+            }
+
+            // 从数组中移除
+            tabs = tabs.filter(t => t.id !== tabId);
+
+            // 切换到第一个可用标签页
+            currentTab = tabs[0];
+            saveTabsToStorage();
+
+            // 更新UI
+            renderTabList();
+            updateTabUI();
+
+            if (currentTab.status === 'connected' || currentTab.status === 'connecting') {
+                showTerminalView();
+            } else if (currentTab.status === 'empty') {
+                showSessionSelector();
+            }
+
+            showToast('标签页已删除: ' + tabName, 'success', 2000);
+        }
+
+        // 更新连接状态（在WebSocket事件回调中调用）
+        function updateConnectionStatus(status, sessionName) {
+            // 找到关联此会话的标签页
+            const targetTab = sessionName
+                ? tabs.find(t => t.sessionName === sessionName)
+                : currentTab;
+
+            if (targetTab) {
+                // 映射状态
+                let tabStatus = status;
+                if (status === 'online') tabStatus = 'connected';
+                if (status === 'offline') tabStatus = 'disconnected';
+
+                targetTab.status = tabStatus;
+                if (status === 'online') {
+                    targetTab.lastActivity = Date.now();
+                }
+                saveTabsToStorage();
+                renderTabList();
+                updateTabUI();
+            }
+        }
+
+        // 在页面关闭时捕获快照
+        window.addEventListener('beforeunload', () => {
+            if (currentTab && currentTab.status === 'connected') {
+                captureSnapshot();
+                currentTab.status = 'disconnected';
+                saveTabsToStorage();
+            }
+        });
+
+        // 获取WebSocket URL
         function getWebSocketUrl() {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
             const host = window.location.hostname || 'localhost';
             const port = protocol === 'wss:' ? '9864' : '9865';
             // PRD 2.1.2: Token 通过 WebSocket 首条消息传递，不在 URL 中
             // 但 session 参数需要通过 URL 传递，以便服务器知道要连接哪个 tmux 会话
-            const session = getPreferredSession();
+            const session = getPreferredTabSession();
             const wsUrl = `${protocol}//${host}:${port}`;
             // 如果有指定会话，添加到 WebSocket URL
             if (session) {
@@ -689,13 +2616,23 @@
             return wsUrl;
         }
 
-        function getPreferredSession() {
+        function getPreferredTabSession() {
+            // 优先从URL获取
             const urlParams = new URLSearchParams(window.location.search);
             const urlSession = urlParams.get('session');
             if (urlSession) return urlSession;
 
-            const storedSession = localStorage.getItem('tmux_session');
-            if (storedSession) return storedSession;
+            // 从当前标签页获取关联的会话
+            if (currentTab && currentTab.sessionName) {
+                return currentTab.sessionName;
+            }
+
+            // 尝试从旧存储迁移
+            const oldSession = localStorage.getItem('tmux_session');
+            if (oldSession) {
+                localStorage.removeItem('tmux_session');
+                return oldSession;
+            }
 
             return DEFAULT_SESSION;
         }
@@ -723,7 +2660,25 @@
             if (!sessionName) return;
 
             const { updateUrl = true } = options;
-            currentSession = sessionName;
+
+            // 查找或创建标签页（如果不存在）
+            let tab = tabs.find(t => t.sessionName === sessionName);
+            if (!tab) {
+                tab = {
+                    id: generateTabId(),
+                    name: sessionName,
+                    sessionName: sessionName,
+                    status: 'disconnected',
+                    snapshot: '',
+                    terminalBuffer: [],
+                    createdAt: Date.now(),
+                    lastActivity: Date.now()
+                };
+                tabs.push(tab);
+                saveTabsToStorage();
+            }
+            currentTab = tab;
+
             localStorage.setItem('tmux_session', sessionName);
             updateSessionIndicator(sessionName);
 
@@ -873,6 +2828,17 @@
                 };
                 ws.send(JSON.stringify(authMsg));
                 console.log('[WebSocket] 已发送认证消息');
+
+                // 更新会话状态为在线
+                updateConnectionStatus('online');
+
+                // 显示终端视图（如果从快照视图连接）
+                showTerminalView();
+
+                // 显示连接成功提示
+                if (currentTab && currentTab.sessionName) {
+                    showToast('已连接到会话: ' + currentTab.sessionName, 'success', 2000);
+                }
             };
 
             ws.onclose = function(event) {
@@ -881,6 +2847,12 @@
 
                 // 停止心跳
                 stopHeartbeat();
+
+                // 捕获当前标签页快照并更新状态为断开
+                if (currentTab && currentTab.status === 'connected') {
+                    captureSnapshot();
+                    updateConnectionStatus('disconnected');
+                }
 
                 // 显示离线提示
                 showOfflineToast();
@@ -921,6 +2893,8 @@
             
             ws.onmessage = function(event) {
                 if (event.data instanceof ArrayBuffer) {
+                    // 处理到缓冲区用于快照
+                    processTerminalOutput(event.data);
                     term.write(new Uint8Array(event.data));
                 } else if (typeof event.data === 'string') {
                     try {
@@ -1004,6 +2978,9 @@
                             if (serverMode === 'tmux' && typeof data.online_count === 'number') {
                                 updatePresenceIndicator(data.online_count);
                             }
+                        } else if (data.type === 'session_created') {
+                            // PRD F-004: 会话创建结果
+                            handleSessionCreated(data);
                         } else if (data.type === 'switch_request') {
                             // 切换会话请求 - 需要刷新页面重连
                             showToast(data.message || '正在切换会话...', 'info', 2000);
@@ -1019,7 +2996,7 @@
                             syncSessionState(data.session);
                             refreshSessions();
                         } else if (data.type === 'session_presence') {
-                            if (data.session && data.session === currentSession) {
+                            if (data.session && currentTab && data.session === currentTab.sessionName) {
                                 updatePresenceIndicator(data.online_count);
                             }
                         } else if (data.type === 'recording_started') {
@@ -1184,9 +3161,12 @@
             }
         });
 
-        // ==================== 会话管理 ====================
-        let allSessions = [];
-        let currentSession = getPreferredSession();
+        // ==================== 会话管理 (已迁移到多会话工作区系统) ====================
+        // 注意：新的多会话工作区系统已替换以下功能
+        // - allSessions -> sessions (在initWorkspaceSystem中定义)
+        // - currentSession (在initWorkspaceSystem中定义)
+        // - getPreferredSession -> 已集成到initWorkspaceSystem
+
         let serverMode = 'pty'; // 'pty' or 'tmux'
 
         // F-003: 更新模式指示器
@@ -1234,23 +3214,6 @@
             if (ws && ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({ type: 'list_sessions' }));
             }
-        }
-
-        function createNewSession() {
-            const name = prompt('请输入新会话名称:');
-            if (name && name.trim()) {
-                const sessionName = name.trim().replace(/[^a-zA-Z0-9_-]/g, '');
-                if (sessionName) {
-                    if (ws && ws.readyState === WebSocket.OPEN) {
-                        // 发送创建并切换请求
-                        ws.send(JSON.stringify({ type: 'switch', session: sessionName }));
-                        showToast('正在创建会话：' + sessionName, 'info', 2000);
-                    }
-                } else {
-                    showToast('会话名只能包含字母、数字、下划线和连字符', 'warning', 3000);
-                }
-            }
-            document.getElementById('sessionPanel').style.display = 'none';
         }
 
         function renderSessionList(sessions, current) {
@@ -1444,7 +3407,14 @@
 
         // ==================== 启动连接 ====================
         console.log('[App] 启动 tmux-web-term 前端');
-        syncSessionState(currentSession);
+
+        // 初始化工作空间系统
+        initWorkspaceSystem();
+
+        // 同步当前标签页的会话状态
+        if (currentTab && currentTab.sessionName) {
+            syncSessionState(currentTab.sessionName);
+        }
         updateModeIndicator(serverMode);
         updatePresenceIndicator(null);
 
@@ -1470,6 +3440,545 @@
         document.addEventListener('visibilitychange', function() {
             if (!document.hidden) {
                 setTimeout(() => term.focus(), 100);
+            }
+        });
+
+        // ==================== 全屏模式 ====================
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().then(() => {
+                    showToast('已进入全屏模式', 'success', 1500);
+                }).catch(err => {
+                    showToast('无法进入全屏: ' + err.message, 'error');
+                });
+            } else {
+                document.exitFullscreen().then(() => {
+                    showToast('已退出全屏模式', 'info', 1500);
+                });
+            }
+        }
+
+        // ==================== 键盘扩展 ====================
+        let keyboardExpanded = false;
+        let keyboardHidden = false;
+        let systemKeyboardActive = false;
+
+        function toggleKeyboardExpand() {
+            keyboardExpanded = !keyboardExpanded;
+            const keyboard = document.getElementById('keyboard');
+            const fabBtn = document.getElementById('fabExpand');
+
+            if (keyboardExpanded) {
+                keyboard.classList.add('keyboard-expanded');
+                fabBtn.classList.add('expanded');
+                fabBtn.title = '收起键盘';
+                showToast('键盘已扩展', 'success', 1000);
+            } else {
+                keyboard.classList.remove('keyboard-expanded');
+                fabBtn.classList.remove('expanded');
+                fabBtn.title = '扩展键盘';
+                showToast('键盘已收起', 'info', 1000);
+            }
+            // 重新适配终端大小
+            setTimeout(() => fitAddon.fit(), 300);
+        }
+
+        // 真正隐藏/显示整个键盘区域
+        function toggleKeyboardVisibility() {
+            keyboardHidden = !keyboardHidden;
+            const keyboard = document.getElementById('keyboard');
+            const fabBtn = document.getElementById('fabExpand');
+
+            if (keyboardHidden) {
+                keyboard.style.display = 'none';
+                fabBtn.style.display = 'none';
+                showToast('虚拟键盘已隐藏，按右下角按钮恢复', 'info', 2000);
+            } else {
+                keyboard.style.display = 'flex';
+                fabBtn.style.display = 'flex';
+                showToast('虚拟键盘已显示', 'success', 1000);
+            }
+            // 重新适配终端大小
+            setTimeout(() => fitAddon.fit(), 300);
+        }
+
+        // ==================== 系统键盘控制 ====================
+        function toggleSystemKeyboard() {
+            const input = document.getElementById('commandInput');
+            const legendBtn = document.getElementById('kbLegendBtn');
+
+            if (systemKeyboardActive) {
+                // 关闭系统键盘
+                input.blur();
+                input.setAttribute('readonly', 'readonly');
+                input.setAttribute('inputmode', 'none');
+                legendBtn.classList.remove('active');
+                legendBtn.title = '打开系统键盘';
+                systemKeyboardActive = false;
+                showToast('系统键盘已关闭', 'info', 1000);
+            } else {
+                // 打开系统键盘
+                input.removeAttribute('readonly');
+                input.setAttribute('inputmode', 'text');
+                input.focus();
+                legendBtn.classList.add('active');
+                legendBtn.title = '关闭系统键盘';
+                systemKeyboardActive = true;
+                showToast('系统键盘已打开', 'success', 1000);
+            }
+        }
+
+        // 防止输入框意外弹出系统键盘
+        document.getElementById('commandInput').addEventListener('focus', function(e) {
+            if (!systemKeyboardActive) {
+                this.blur();
+                showToast('点击 🔤 按钮打开系统键盘', 'info', 1500);
+            }
+        });
+
+        // ==================== FAB 拖拽功能 ====================
+        let fabVisible = true;
+        let fabPosition = { x: null, y: null }; // null 表示使用默认位置
+
+        // 从 localStorage 恢复 FAB 位置
+        function loadFabPosition() {
+            const saved = localStorage.getItem('fab_position');
+            if (saved) {
+                try {
+                    fabPosition = JSON.parse(saved);
+                    applyFabPosition();
+                } catch (e) {
+                    console.error('[FAB] 位置恢复失败:', e);
+                }
+            }
+            const savedVisibility = localStorage.getItem('fab_visible');
+            if (savedVisibility !== null) {
+                fabVisible = savedVisibility === 'true';
+                applyFabVisibility();
+            }
+        }
+
+        // 保存 FAB 位置到 localStorage
+        function saveFabPosition() {
+            localStorage.setItem('fab_position', JSON.stringify(fabPosition));
+        }
+
+        // 应用 FAB 位置
+        function applyFabPosition() {
+            const fabContainer = document.querySelector('.fab-container');
+            if (fabPosition.x !== null && fabPosition.y !== null) {
+                fabContainer.style.right = 'auto';
+                fabContainer.style.bottom = 'auto';
+                fabContainer.style.left = fabPosition.x + 'px';
+                fabContainer.style.top = fabPosition.y + 'px';
+            }
+        }
+
+        // 应用 FAB 可见性
+        function applyFabVisibility() {
+            const fabContainer = document.querySelector('.fab-container');
+            const toolbarBtn = document.getElementById('toolbarFabToggle');
+            if (fabVisible) {
+                fabContainer.style.display = 'flex';
+                toolbarBtn?.classList.add('active');
+            } else {
+                fabContainer.style.display = 'none';
+                toolbarBtn?.classList.remove('active');
+            }
+        }
+
+        // 切换 FAB 可见性
+        function toggleFabVisibility() {
+            fabVisible = !fabVisible;
+            localStorage.setItem('fab_visible', fabVisible);
+            applyFabVisibility();
+            showToast(fabVisible ? '悬浮按钮已显示' : '悬浮按钮已隐藏', 'info', 1000);
+        }
+
+        // 重置 FAB 位置
+        function resetFabPosition() {
+            fabPosition = { x: null, y: null };
+            localStorage.removeItem('fab_position');
+            const fabContainer = document.querySelector('.fab-container');
+            fabContainer.style.left = 'auto';
+            fabContainer.style.top = 'auto';
+            fabContainer.style.right = '0';
+            fabContainer.style.bottom = '80px';
+            showToast('悬浮按钮位置已重置', 'success', 1000);
+        }
+
+        // 初始化 FAB 拖拽
+        function initFabDrag() {
+            const fabContainer = document.querySelector('.fab-container');
+            const fabExpand = document.getElementById('fabExpand');
+            let isDragging = false;
+            let startX, startY, initialX, initialY;
+            let dragThreshold = 10;
+            let hasMoved = false;
+
+            // 触摸开始
+            fabExpand.addEventListener('touchstart', function(e) {
+                const touch = e.touches[0];
+                startX = touch.clientX;
+                startY = touch.clientY;
+                initialX = fabContainer.offsetLeft;
+                initialY = fabContainer.offsetTop;
+                isDragging = false;
+                hasMoved = false;
+                fabExpand.classList.add('dragging');
+            }, { passive: true });
+
+            // 触摸移动
+            fabExpand.addEventListener('touchmove', function(e) {
+                if (!hasMoved) return;
+                const touch = e.touches[0];
+                const deltaX = touch.clientX - startX;
+                const deltaY = touch.clientY - startY;
+
+                if (Math.abs(deltaX) > dragThreshold || Math.abs(deltaY) > dragThreshold) {
+                    isDragging = true;
+                }
+
+                if (isDragging) {
+                    e.preventDefault();
+                    let newX = initialX + deltaX;
+                    let newY = initialY + deltaY;
+
+                    // 边界限制
+                    const maxX = window.innerWidth - fabContainer.offsetWidth;
+                    const maxY = window.innerHeight - fabContainer.offsetHeight;
+                    newX = Math.max(0, Math.min(newX, maxX));
+                    newY = Math.max(0, Math.min(newY, maxY));
+
+                    fabContainer.style.left = newX + 'px';
+                    fabContainer.style.top = newY + 'px';
+                    fabContainer.style.right = 'auto';
+                    fabContainer.style.bottom = 'auto';
+
+                    fabPosition = { x: newX, y: newY };
+                }
+            }, { passive: false });
+
+            // 触摸结束
+            fabExpand.addEventListener('touchend', function(e) {
+                fabExpand.classList.remove('dragging');
+                if (isDragging) {
+                    saveFabPosition();
+                    showToast('位置已保存', 'success', 800);
+                }
+                isDragging = false;
+                hasMoved = false;
+            });
+
+            // 鼠标拖拽（桌面端）
+            fabExpand.addEventListener('mousedown', function(e) {
+                startX = e.clientX;
+                startY = e.clientY;
+                initialX = fabContainer.offsetLeft;
+                initialY = fabContainer.offsetTop;
+                isDragging = false;
+                hasMoved = true;
+                fabExpand.classList.add('dragging');
+
+                function onMouseMove(e) {
+                    const deltaX = e.clientX - startX;
+                    const deltaY = e.clientY - startY;
+
+                    if (Math.abs(deltaX) > dragThreshold || Math.abs(deltaY) > dragThreshold) {
+                        isDragging = true;
+                    }
+
+                    if (isDragging) {
+                        let newX = initialX + deltaX;
+                        let newY = initialY + deltaY;
+
+                        const maxX = window.innerWidth - fabContainer.offsetWidth;
+                        const maxY = window.innerHeight - fabContainer.offsetHeight;
+                        newX = Math.max(0, Math.min(newX, maxX));
+                        newY = Math.max(0, Math.min(newY, maxY));
+
+                        fabContainer.style.left = newX + 'px';
+                        fabContainer.style.top = newY + 'px';
+                        fabContainer.style.right = 'auto';
+                        fabContainer.style.bottom = 'auto';
+
+                        fabPosition = { x: newX, y: newY };
+                    }
+                }
+
+                function onMouseUp() {
+                    fabExpand.classList.remove('dragging');
+                    if (isDragging) {
+                        saveFabPosition();
+                        showToast('位置已保存', 'success', 800);
+                    }
+                    isDragging = false;
+                    hasMoved = false;
+                    document.removeEventListener('mousemove', onMouseMove);
+                    document.removeEventListener('mouseup', onMouseUp);
+                }
+
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+            });
+        }
+
+        // ==================== 顶部工具栏展开 ====================
+        let headerToolbarExpanded = false;
+        let toolbarCloseTimer = null;
+
+        function toggleHeaderToolbar(e) {
+            // 清除之前的关闭定时器
+            if (toolbarCloseTimer) {
+                clearTimeout(toolbarCloseTimer);
+                toolbarCloseTimer = null;
+            }
+
+            headerToolbarExpanded = !headerToolbarExpanded;
+            const toolbar = document.getElementById('headerToolbar');
+            const btn = document.getElementById('headerExpandBtn');
+
+            if (headerToolbarExpanded) {
+                toolbar.classList.add('expanded');
+                btn.classList.add('expanded');
+            } else {
+                toolbar.classList.remove('expanded');
+                btn.classList.remove('expanded');
+            }
+        }
+
+        // 点击外部关闭工具栏 - 使用延迟防止立即关闭
+        document.addEventListener('click', function(e) {
+            const toolbar = document.getElementById('headerToolbar');
+            const btn = document.getElementById('headerExpandBtn');
+
+            if (!toolbar || !btn) return;
+
+            // 如果点击的是工具栏或按钮，不处理
+            if (toolbar.contains(e.target) || btn.contains(e.target)) {
+                return;
+            }
+
+            // 延迟关闭，避免和展开操作冲突
+            if (headerToolbarExpanded) {
+                toolbarCloseTimer = setTimeout(() => {
+                    headerToolbarExpanded = false;
+                    toolbar.classList.remove('expanded');
+                    btn.classList.remove('expanded');
+                }, 100);
+            }
+        });
+
+        // ==================== 手势帮助 ====================
+        function showGestureHelp() {
+            const helpText = `
+手势操作说明：
+
+📱 单指操作：
+• 短距离滑动 - 滚动终端内容
+• 长距离快速滑动 - 进入复制模式
+• 长按 - 选择文本
+
+📋 复制模式：
+• 单指滑动 - 滚动查看历史
+• 双指下滑 - 退出复制模式
+• 点击 - 选择文本起点
+
+⌨️ 快捷操作：
+• 悬浮按钮 - 可拖拽移动位置
+• 点击展开 - 展开更多按键
+• 🔤 按钮 - 切换系统键盘
+            `;
+            alert(helpText);
+        }
+
+        // ==================== 主题切换 ====================
+        let currentTheme = 'dark';
+        function toggleTheme() {
+            // 暂不支持主题切换，预留接口
+            showToast('主题切换功能开发中', 'info', 1000);
+        }
+
+        // ==================== 移动端手势支持（增强版） ====================
+        let isCopyMode = false;
+
+        (function initTouchGestures() {
+            const terminalContainer = document.getElementById('terminal-container');
+            const gestureHint = document.getElementById('gestureHint');
+            const copyModeIndicator = document.getElementById('copyModeIndicator');
+            let touchStartY = 0;
+            let touchStartTime = 0;
+            let isTouching = false;
+            let isScrolling = false;
+            let lastTapTime = 0;
+
+            function showHint(text, duration = 1500) {
+                gestureHint.textContent = text;
+                gestureHint.classList.add('visible');
+                setTimeout(() => {
+                    gestureHint.classList.remove('visible');
+                }, duration);
+            }
+
+            function updateCopyModeIndicator(show) {
+                if (show) {
+                    copyModeIndicator.classList.add('visible');
+                    isCopyMode = true;
+                } else {
+                    copyModeIndicator.classList.remove('visible');
+                    isCopyMode = false;
+                }
+            }
+
+            // 进入复制模式
+            function enterCopyMode() {
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({ type: 'input', data: '\x02[' }));
+                    updateCopyModeIndicator(true);
+                    showHint('已进入复制模式 (↑↓滑动滚动, 双指退出)', 2000);
+                }
+            }
+
+            // 退出复制模式
+            function exitCopyMode() {
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({ type: 'input', data: 'q' }));
+                    updateCopyModeIndicator(false);
+                    showHint('已退出复制模式', 1000);
+                }
+            }
+
+            // 发送 tmux 滚动命令
+            function sendTmuxScroll(direction) {
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    // 向上滚动（查看历史）发送 PageUp
+                    if (direction === 'up') {
+                        ws.send(JSON.stringify({ type: 'input', data: '\x1b[5~' })); // PageUp
+                    } else {
+                        ws.send(JSON.stringify({ type: 'input', data: '\x1b[6~' })); // PageDown
+                    }
+                }
+            }
+
+            // 发送 tmux 行滚动
+            function sendTmuxLineScroll(direction) {
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    if (direction === 'up') {
+                        ws.send(JSON.stringify({ type: 'input', data: '\x1b[A' })); // 上箭头
+                    } else {
+                        ws.send(JSON.stringify({ type: 'input', data: '\x1b[B' })); // 下箭头
+                    }
+                }
+            }
+
+            terminalContainer.addEventListener('touchstart', function(e) {
+                touchStartY = e.touches[0].clientY;
+                touchStartTime = Date.now();
+                isTouching = true;
+                isScrolling = false;
+
+                // 检测双击进入复制模式
+                const now = Date.now();
+                if (now - lastTapTime < 300) {
+                    enterCopyMode();
+                }
+                lastTapTime = now;
+            }, { passive: true });
+
+            terminalContainer.addEventListener('touchmove', function(e) {
+                if (!isTouching) return;
+                const touchY = e.touches[0].clientY;
+                const deltaY = touchStartY - touchY;
+
+                // 复制模式下的滚动处理
+                if (isCopyMode) {
+                    e.preventDefault(); // 阻止默认滚动行为
+
+                    if (Math.abs(deltaY) > 30 && !isScrolling) {
+                        isScrolling = true;
+                        if (deltaY > 0) {
+                            // 向上滑动 - 查看更早的历史
+                            sendTmuxScroll('up');
+                        } else {
+                            // 向下滑动 - 查看更新的内容
+                            sendTmuxScroll('down');
+                        }
+                        // 重置起始位置，实现连续滚动
+                        touchStartY = touchY;
+                    }
+                    return;
+                }
+
+                // 正常模式下的滚动
+                if (Math.abs(deltaY) > 30 && !isScrolling) {
+                    isScrolling = true;
+                    if (deltaY > 0) {
+                        // 向上滑动
+                        term.scrollLines(-5);
+                    } else {
+                        // 向下滑动
+                        term.scrollLines(5);
+                    }
+                    touchStartY = touchY;
+                }
+            }, { passive: false });
+
+            terminalContainer.addEventListener('touchend', function(e) {
+                if (!isTouching) return;
+                isTouching = false;
+
+                const touchEndY = e.changedTouches[0].clientY;
+                const deltaY = touchStartY - touchEndY;
+                const deltaTime = Date.now() - touchStartTime;
+
+                // 复制模式下的退出检测
+                if (isCopyMode) {
+                    // 快速向下滑动退出复制模式
+                    if (deltaY < -100 && deltaTime < 500) {
+                        exitCopyMode();
+                    }
+                    isScrolling = false;
+                    return;
+                }
+
+                // 正常模式下进入复制模式（长距离快速向上滑动）
+                if (deltaY > 100 && deltaTime < 500 && !isScrolling) {
+                    enterCopyMode();
+                }
+
+                isScrolling = false;
+            }, { passive: true });
+
+            // 双指下滑退出复制模式
+            terminalContainer.addEventListener('touchstart', function(e) {
+                if (e.touches.length === 2 && isCopyMode) {
+                    exitCopyMode();
+                }
+            }, { passive: true });
+
+            // 监听键盘事件检测退出复制模式
+            document.addEventListener('keydown', function(e) {
+                if (isCopyMode && e.key === 'q') {
+                    updateCopyModeIndicator(false);
+                }
+            });
+
+            console.log('[Touch] 手势支持已初始化（增强版）');
+        })();
+
+        // 初始化 FAB 位置和拖拽
+        loadFabPosition();
+        initFabDrag();
+
+        // 初始化多会话工作区系统
+        initWorkspaceSystem();
+
+        // ==================== Tab 页面预加载 ====================
+        // 存储会话状态到 localStorage，方便新标签页快速恢复
+        window.addEventListener('beforeunload', function() {
+            const sessionName = document.getElementById('sessionIndicator').textContent;
+            if (sessionName && sessionName !== '独立终端') {
+                localStorage.setItem('tmux_last_session', sessionName);
             }
         });
     </script>
