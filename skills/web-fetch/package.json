@@ -1,0 +1,14 @@
+{
+  "name": "web-fetch",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "万能网页抓取工具，支持多种策略绕过反爬虫检测",
+  "scripts": {
+    "test": "node scripts/fetch-page.mjs --help"
+  },
+  "dependencies": {
+    "playwright": "^1.42.0",
+    "playwright-extra": "^4.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2"
+  }
+}

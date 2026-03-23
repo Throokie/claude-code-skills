@@ -1,0 +1,16 @@
+{
+  "name": "puppeteer-cli",
+  "version": "1.0.0",
+  "description": "浏览器自动化 CLI 工具",
+  "type": "module",
+  "main": "scripts/puppeteer-cli.mjs",
+  "scripts": {
+    "test": "node scripts/puppeteer-cli.mjs --help"
+  },
+  "dependencies": {
+    "puppeteer": "^24.0.0"
+  },
+  "keywords": ["puppeteer", "cli", "browser", "automation"],
+  "author": "",
+  "license": "MIT"
+}

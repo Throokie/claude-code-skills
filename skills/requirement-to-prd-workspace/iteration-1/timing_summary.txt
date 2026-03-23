@@ -1,0 +1,11 @@
+Test 1 - Task Management System
+With Skill: tokens=47790, duration=518690ms
+Without Skill: tokens=38690, duration=218767ms
+
+Test 2 - Mobile App
+With Skill: tokens=44041, duration=155364ms
+Without Skill: tokens=35414, duration=122803ms
+
+Test 3 - Analytics Dashboard
+With Skill: tokens=45238, duration=644844ms
+Without Skill: tokens=33163, duration=106419ms

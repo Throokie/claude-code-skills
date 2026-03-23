@@ -1,0 +1,21 @@
+{
+  "name": "playwright-cli-skill",
+  "version": "1.0.0",
+  "description": "Playwright CLI skill for Claude Code - Browser automation tool",
+  "type": "module",
+  "scripts": {
+    "test": "node scripts/playwright-cli.mjs --help"
+  },
+  "dependencies": {
+    "playwright": "^1.40.0"
+  },
+  "keywords": [
+    "playwright",
+    "browser",
+    "automation",
+    "testing",
+    "claude-code",
+    "skill"
+  ],
+  "license": "MIT"
+}

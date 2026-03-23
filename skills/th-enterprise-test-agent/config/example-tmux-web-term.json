@@ -1,0 +1,25 @@
+{
+  "_comment": "Enterprise Browser Test Configuration - tmux-web-term example",
+  "tests": {
+    "pageLoad": true,
+    "elementCheck": true,
+    "connection": true,
+    "sessionPanel": true,
+    "terminalInput": true,
+    "responsive": true,
+    "performance": true
+  },
+  "selectors": {
+    "elements": ["#terminal", "#connectBtn", "#tokenInput"],
+    "terminal": "#terminal",
+    "connectBtn": "#connectBtn",
+    "tokenInput": "#tokenInput",
+    "sessionBtn": "#sessionBtn",
+    "sessionPanel": "#sessionPanel",
+    "statusText": "#statusText"
+  },
+  "auth": {
+    "type": "token",
+    "token": "your-token-here"
+  }
+}

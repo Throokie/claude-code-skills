@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+# Knowledge Hub CLI 工具
+
+KNOWLEDGE_DIR="${HOME}/.claude/knowledge"
+SRC_DIR="${HOME}/src/projects/tools/user-scripts/knowledge"
+
+command=$1
+shift
+
+case "$command" in
+    today)
+        TODAY=$(date +%Y-%m-%d)
+        INBOX_FILE="${KNOWLEDGE_DIR}/inbox/${TODAY}.md"
+        if [ -f "$INBOX_FILE" ]; then
+            cat "$INBOX_FILE"
+        else
+            echo "今日暂无记录"
+        fi
+        ;;
+    search)
+        keyword="$1"
+        echo "🔍 搜索知识库: $keyword"
+        echo ""
+        echo "=== Inbox ==="
+        grep -r "$keyword" "${KNOWLEDGE_DIR}/inbox/" 2>/dev/null | head -5
+        echo ""
+        echo "=== Notes ==="
+        grep -r "$keyword" "${KNOWLEDGE_DIR}/notes/" 2>/dev/null | head -10
+        echo ""
+        echo "=== Memory ==="
+        grep -r "$keyword" "${KNOWLEDGE_DIR}/memory/" 2>/dev/null | head -5
+        ;;
+    organize)
+        echo "📝 整理 inbox..."
+        ls -1 "${KNOWLEDGE_DIR}/inbox/" | while read file; do
+            echo "  - $file"
+        done
+        echo ""
+        echo "提示: 请检查 inbox 中的记录，将高价值内容整理到 notes/"
+        ;;
+    stats)
+        echo "📊 知识库统计"
+        echo ""
+        echo "Inbox:"
+        find "${KNOWLEDGE_DIR}/inbox/" -name "*.md" | wc -l
+        echo "  个文件"
+        echo ""
+        echo "Notes:"
+        find "${KNOWLEDGE_DIR}/notes/" -name "*.md" 2>/dev/null | wc -l
+        echo "  个文件"
+        echo ""
+        echo "Memory:"
+        find "${KNOWLEDGE_DIR}/memory/" -name "*.md" 2>/dev/null | wc -l
+        echo "  个文件"
+        ;;
+    backup)
+        BACKUP_FILE="${HOME}/backups/knowledge-$(date +%Y%m%d-%H%M%S).tar.gz"
+        mkdir -p "${HOME}/backups"
+        tar -czf "$BACKUP_FILE" -C "$(dirname "$SRC_DIR")" "$(basename "$SRC_DIR")"
+        echo "✅ 备份完成: $BACKUP_FILE"
+        ;;
+    link)
+        echo "🔗 检查软链接..."
+        if [ -L "${HOME}/.claude/knowledge" ]; then
+            echo "✅ 软链接已存在"
+            ls -la "${HOME}/.claude/knowledge"
+        else
+            echo "❌ 软链接不存在，正在创建..."
+            ln -sfn "$SRC_DIR" "${HOME}/.claude/knowledge"
+            echo "✅ 软链接已创建"
+        fi
+        ;;
+    *)
+        echo "Knowledge Hub CLI"
+        echo ""
+        echo "用法: knowledge <命令>"
+        echo ""
+        echo "命令:"
+        echo "  today      查看今日记录"
+        echo "  search     搜索知识库"
+        echo "  organize   整理 inbox"
+        echo "  stats      查看统计"
+        echo "  backup     备份知识库"
+        echo "  link       检查/修复软链接"
+        ;;
+esac

@@ -1,0 +1,5 @@
+#!/bin/bash
+# New API CLI 包装脚本
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+exec "$SCRIPT_DIR/newapi-cli" "$@"

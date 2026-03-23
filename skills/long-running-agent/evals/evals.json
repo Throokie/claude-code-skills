@@ -1,0 +1,45 @@
+{
+  "skill_name": "long-running-agent",
+  "evals": [
+    {
+      "id": 1,
+      "name": "multi-agent-team-creation",
+      "prompt": "我有一个复杂的项目需要开发：创建一个支持用户认证、文章发布、评论功能的博客系统。我需要你帮我组建一个多代理团队来完成这个项目。请创建必要的团队成员（project-lead、coder、reviewer、tester），并为每个任务定义明确的完成标准。",
+      "expected_output": "应该创建一个包含 project-lead、coder、reviewer、tester 的团队，并为博客系统的各个功能创建带有完成标准的任务",
+      "files": [],
+      "assertions": []
+    },
+    {
+      "id": 2,
+      "name": "evaluator-optimizer-workflow",
+      "prompt": "我正在开发一个 Python API，需要实现一个用户注册功能。请使用 Evaluator-Optimizer 模式来确保代码质量。先让 coder 实现功能，然后让 reviewer 进行审查，如果审查不通过需要返回修改。展示完整的闭环流程。",
+      "expected_output": "应该展示完整的 Evaluator-Optimizer 流程：Worker 实现 -> Reviewer 审查 -> 根据反馈修改 -> 最终完成",
+      "files": [],
+      "assertions": []
+    },
+    {
+      "id": 3,
+      "name": "session-recovery-protocol",
+      "prompt": "我之前的会话中正在开发一个电商网站的购物车功能，但现在会话意外中断了。请按照会话恢复协议，读取之前的进度，恢复团队状态，并继续工作。假设 progress.json 中记录了之前的任务状态。",
+      "expected_output": "应该展示会话恢复流程：读取 progress.json -> 检查 TaskList -> 恢复团队 -> 继续工作",
+      "files": [],
+      "assertions": []
+    },
+    {
+      "id": 4,
+      "name": "task-completion-criteria",
+      "prompt": "帮我创建一个任务来实现数据导出功能。这个任务必须有明确的完成标准，包括：1) 支持 CSV 和 JSON 格式导出 2) 处理大数据集时分页导出 3) 单元测试覆盖率 > 80% 4) 通过 code-reviewer 审查。请展示完整的 TaskCreate 调用。",
+      "expected_output": "应该创建一个带有明确完成标准的任务，包括功能要求、测试要求、审查要求",
+      "files": [],
+      "assertions": []
+    },
+    {
+      "id": 5,
+      "name": "orchestrator-workers-pattern",
+      "prompt": "我需要分析一个大型代码库的架构问题。这个任务很复杂，需要多个代理并行工作：一个负责搜索相关文件，一个负责分析依赖关系，一个负责检查性能瓶颈。请使用 Orchestrator-Workers 模式来分配任务并综合结果。",
+      "expected_output": "应该展示 Orchestrator-Workers 模式：Lead Agent 分配任务 -> 多个 Subagent 并行工作 -> Lead Agent 综合结果 -> Reviewer 审查",
+      "files": [],
+      "assertions": []
+    }
+  ]
+}

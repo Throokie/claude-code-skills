@@ -1,0 +1,32 @@
+# 忽略所有配置文件
+config.json
+config/*.json
+config/*.yaml
+config/*.yml
+
+# 忽略环境变量
+.env
+.env.*
+
+# 忽略数据目录
+data/
+*.log
+
+# 忽略缓存
+image-cache/
+paste-cache/
+*.cache
+
+# 忽略 IDE
+.ide/
+.vscode/
+*.lock
+
+# 忽略 node_modules
+node_modules/
+npm-debug.log*
+
+# 忽略临时文件
+tmp/
+temp/
+*.tmp
