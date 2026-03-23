@@ -1,0 +1,1340 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="Cache-Control" content="no-cache">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#0c0c0c">
+    <link rel="manifest" href="/manifest.json">
+    <title>tmux-web-term 移动端</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            background: #0c0c0c;
+            color: #ccc;
+            height: 100vh;
+            height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            overflow: hidden;
+        }
+        
+        /* 顶部状态栏 */
+        .header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #333;
+            flex-shrink: 0;
+        }
+        
+        .header h1 {
+            font-size: 15px;
+            color: #4ade80;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            background: rgba(0,0,0,0.3);
+            padding: 4px 10px;
+            border-radius: 12px;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #666;
+            transition: all 0.3s ease;
+        }
+        
+        .status-dot.connected {
+            background: #4ade80;
+            box-shadow: 0 0 8px #4ade80, 0 0 15px rgba(74, 222, 128, 0.4);
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.recording {
+            background: #ef4444;
+            box-shadow: 0 0 8px #ef4444, 0 0 15px rgba(239, 68, 68, 0.4);
+            animation: recording-pulse 1.5s infinite;
+        }
+
+        @keyframes recording-pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        #sessionSelect {
+            outline: none;
+            max-width: 120px;
+        }
+
+        #sessionSelect:hover {
+            border-color: #4ade80;
+        }
+
+        /* 会话列表按钮 */
+        .session-btn {
+            background: linear-gradient(135deg, #2a2a35 0%, #25252e 100%);
+            color: #e0e0e0;
+            border: 1px solid #3a3a45;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.15s ease;
+        }
+
+        .session-btn:active {
+            background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+            color: #000;
+            border-color: #4ade80;
+        }
+
+        .session-btn.active {
+            background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+            color: #000;
+            border-color: #4ade80;
+        }
+        
+        /* F-003: 模式指示器样式 */
+        .mode-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .mode-indicator.mode-tmux {
+            color: #60a5fa;
+            background: rgba(96, 165, 250, 0.1);
+        }
+        .mode-indicator.mode-pty {
+            color: #4ade80;
+            background: rgba(74, 222, 128, 0.1);
+        }
+        .mode-indicator.mode-fallback {
+            color: #fbbf24;
+            background: rgba(251, 191, 36, 0.1);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        
+        /* 终端区域 */
+        #terminal-container {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+            background: #0c0c0c;
+        }
+        
+        #terminal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            padding: 5px;
+        }
+        
+        /* 虚拟键盘区域 */
+        .keyboard-area {
+            background: #1a1a1e;
+            border-top: 1px solid #333;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* 输入框行 */
+        .input-row {
+            display: flex;
+            padding: 8px;
+            gap: 8px;
+            background: #1f1f25;
+            border-bottom: 1px solid #2a2a30;
+        }
+        
+        .input-row input {
+            flex: 1;
+            background: #2a2a30;
+            border: 1px solid #3a3a45;
+            color: #fff;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        
+        .input-row input:focus {
+            border-color: #4ade80;
+        }
+        
+        .input-row input::placeholder {
+            color: #666;
+        }
+        
+        .send-btn {
+            background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.2s;
+        }
+        
+        .send-btn:active {
+            transform: scale(0.95);
+        }
+        
+        /* 快捷键行 */
+        .keys-row {
+            display: flex;
+            gap: 6px;
+            padding: 8px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+
+        .keys-row::-webkit-scrollbar {
+            display: none;
+        }
+
+        .keys-row button {
+            background: linear-gradient(135deg, #2a2a35 0%, #25252e 100%);
+            color: #e0e0e0;
+            border: 1px solid #3a3a45;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.15s ease;
+            flex-shrink: 0;
+        }
+
+        .keys-row button:active {
+            background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+            color: #000;
+            border-color: #4ade80;
+            transform: scale(0.95);
+        }
+
+        .keys-row button.control {
+            background: linear-gradient(135deg, #3a3a45 0%, #353540 100%);
+            border-color: #4a4a55;
+        }
+
+        .keys-row button.app {
+            background: linear-gradient(135deg, #1e3a5f 0%, #1a2f4f 100%);
+            border-color: #2a4a6f;
+        }
+
+        /* 方向键 - 放大 */
+        .keys-row button.arrow-key {
+            font-size: 16px;
+            font-weight: 700;
+            padding: 14px 18px;
+            min-width: 50px;
+            background: linear-gradient(135deg, #4a4a55 0%, #3f3f4a 100%);
+            border-color: #5a5a65;
+        }
+
+        /* tmux 前缀键 */
+        .keys-row button.tmux-prefix {
+            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+            border-color: #2563eb;
+            color: #fff;
+            font-weight: 600;
+        }
+
+        /* 第二排快捷键 */
+        .keys-row-secondary {
+            border-top: 1px solid #2a2a30;
+        }
+
+        /* 连接提示 */
+        .connect-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            backdrop-filter: blur(5px);
+        }
+        
+        .connect-overlay.hidden {
+            display: none;
+        }
+
+        /* Toast 提示 */
+        .toast {
+            background: rgba(30, 30, 40, 0.95);
+            border: 1px solid #3a3a45;
+            border-radius: 10px;
+            padding: 12px 16px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            animation: slideDown 0.3s ease;
+            max-width: 100%;
+        }
+
+        .toast.toast-hidden {
+            animation: slideUp 0.3s ease forwards;
+        }
+
+        .toast-success { border-left: 4px solid #4ade80; }
+        .toast-error { border-left: 4px solid #ff5555; }
+        .toast-warning { border-left: 4px solid #f1fa8c; }
+        .toast-info { border-left: 4px solid #69a5f7; }
+
+        .toast-icon {
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .toast-content {
+            flex: 1;
+            color: #e0e0e0;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            padding: 0;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .toast-close:hover { color: #fff; }
+
+        @keyframes slideDown {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(0); opacity: 1; }
+            to { transform: translateY(-20px); opacity: 0; }
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #333;
+            border-top-color: #4ade80;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .connect-text {
+            color: #888;
+            font-size: 14px;
+            margin-top: 15px;
+        }
+
+        /* Token 输入区域 */
+        .token-input-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .token-input-area.hidden {
+            display: none;
+        }
+
+        .token-input {
+            background: #1a1a2e;
+            border: 1px solid #3a3a45;
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: #fff;
+            font-size: 16px;
+            width: 280px;
+            text-align: center;
+            outline: none;
+        }
+
+        .token-input:focus {
+            border-color: #4ade80;
+            box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.2);
+        }
+
+        .token-btn {
+            background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+            border: none;
+            border-radius: 8px;
+            padding: 12px 32px;
+            color: #0c0c0c;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .token-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(74, 222, 128, 0.3);
+        }
+
+        .token-btn:active {
+            transform: translateY(0);
+        }
+
+        .token-error {
+            color: #ff5555;
+            font-size: 13px;
+            margin-top: 10px;
+        }
+        
+        /* 移动端适配 */
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 14px;
+            }
+            
+            .status {
+                font-size: 11px;
+                padding: 3px 8px;
+            }
+            
+            .keys-row button {
+                padding: 9px 12px;
+                font-size: 11px;
+            }
+            
+            .input-row input {
+                font-size: 13px;
+                padding: 9px 10px;
+            }
+        }
+        
+        /* 横屏优化 */
+        @media (orientation: landscape) and (max-height: 500px) {
+            .keys-row-secondary {
+                display: none;
+            }
+            
+            .header {
+                padding: 6px 12px;
+            }
+            
+            .keys-row {
+                padding: 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部状态栏 -->
+    <div class="header">
+        <h1>🦞 tmux-web-term</h1>
+        <div class="status">
+            <div class="status-dot" id="statusDot"></div>
+            <span id="statusText">连接中</span>
+            <span id="modeIndicator" class="mode-indicator" style="margin-left:10px;font-size:12px;color:#888;">🟢 PTY 模式</span>
+        </div>
+        <div style="display:flex;gap:6px;">
+            <button class="session-btn" id="recordBtn" onclick="toggleRecording()" title="录制控制" style="padding:4px 8px;">⏺</button>
+            <button class="session-btn" id="fileTransferBtn" onclick="toggleFileTransfer()" title="文件传输" style="padding:4px 8px;">📁</button>
+            <button class="session-btn" id="sessionBtn" onclick="toggleSessionList()">会话</button>
+        </div>
+    </div>
+
+    <!-- 文件传输面板 -->
+    <div id="fileTransferPanel" style="display:none;position:fixed;top:60px;right:10px;background:#1a1a1e;border:1px solid #333;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,0.5);z-index:1000;padding:15px;min-width:250px;">
+        <div style="padding-bottom:10px;border-bottom:1px solid #333;display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:13px;font-weight:600;color:#fff;">文件传输 (rz/sz)</span>
+            <button onclick="document.getElementById('fileTransferPanel').style.display='none'" style="background:transparent;border:none;color:#888;cursor:pointer;font-size:16px;">×</button>
+        </div>
+        <div style="padding:15px 0;">
+            <p style="color:#888;font-size:12px;margin-bottom:10px;">使用 rz/sz 命令传输文件：</p>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+                <button onclick="sendRzCommand()" style="background:linear-gradient(135deg,#4ade80,#22c55e);color:#000;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;">⬆️ 上传 (rz)</button>
+                <button onclick="sendSzCommand()" style="background:linear-gradient(135deg,#60a5fa,#3b82f6);color:#000;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;">⬇️ 下载 (sz)</button>
+            </div>
+            <p style="color:#666;font-size:11px;margin-top:12px;">提示：在终端中输入 rz 或 sz 命令后，再点击对应按钮</p>
+        </div>
+    </div>
+
+    <!-- Toast 提示容器 -->
+    <div id="toastContainer" style="position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:2000;max-width:90%;width:350px;"></div>
+
+    <!-- 会话列表面板 -->
+    <div id="sessionPanel" style="display:none;position:fixed;top:60px;right:10px;background:#1a1a1e;border:1px solid #333;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,0.5);z-index:1000;max-height:350px;overflow-y:auto;min-width:220px;">
+        <div style="padding:12px 15px;border-bottom:1px solid #333;display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:12px;color:#888;">会话列表</span>
+            <button onclick="refreshSessions()" style="background:#2a2a35;color:#4ade80;border:1px solid #4ade80;border-radius:6px;padding:2px 8px;font-size:11px;cursor:pointer;" title="刷新列表">↻</button>
+        </div>
+        <div id="sessionList"></div>
+        <div style="padding:10px 15px;border-top:1px solid #333;">
+            <button onclick="createNewSession()" style="width:100%;background:linear-gradient(135deg,#4ade80,#22c55e);color:#000;border:none;border-radius:8px;padding:8px;font-size:13px;font-weight:600;cursor:pointer;">+ 新建会话</button>
+        </div>
+    </div>
+    
+    <!-- 终端容器 -->
+    <div id="terminal-container">
+        <div id="terminal"></div>
+        <!-- 连接中遮罩 -->
+        <div class="connect-overlay" id="connectOverlay">
+            <!-- 连接中显示的内容 -->
+            <div id="connectLoading">
+                <div class="spinner"></div>
+                <div class="connect-text">正在连接终端...</div>
+            </div>
+            <!-- Token 输入区域（初始隐藏） -->
+            <div id="tokenInputArea" class="token-input-area hidden">
+                <div class="connect-text">需要访问 Token 才能继续</div>
+                <input type="password" id="tokenInput" class="token-input" placeholder="请输入访问 Token" autocomplete="off">
+                <button id="tokenSubmitBtn" class="token-btn">连接</button>
+                <div id="tokenError" class="token-error hidden"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 虚拟键盘区域 -->
+    <div class="keyboard-area">
+        <!-- 输入框行 -->
+        <div class="input-row">
+            <input type="text" id="commandInput" placeholder="输入命令..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+            <button class="send-btn" id="sendBtn">发送</button>
+        </div>
+
+        <!-- 第一排：Ctrl 键 + tmux 前缀 -->
+        <div class="keys-row">
+            <button onclick="sendKey('\x03')" class="control">Ctrl+C</button>
+            <button onclick="sendKey('\x04')" class="control">Ctrl+D</button>
+            <button onclick="sendKey('\x1a')" class="control">Ctrl+Z</button>
+            <button onclick="sendKey('\x02')" class="tmux-prefix">Ctrl+B</button>
+            <button onclick="sendKey('\t')">Tab</button>
+            <button onclick="sendKey('\x1b')">Esc</button>
+            <button onclick="sendInput('clear\n')" class="app">clear</button>
+        </div>
+
+        <!-- 第二排：方向键（放大） -->
+        <div class="keys-row keys-row-secondary">
+            <button onclick="sendKey('\x1b[D')" class="arrow-key">←</button>
+            <button onclick="sendKey('\x1b[A')" class="arrow-key">↑</button>
+            <button onclick="sendKey('\x1b[B')" class="arrow-key">↓</button>
+            <button onclick="sendKey('\x1b[C')" class="arrow-key">→</button>
+            <button onclick="sendInput('ls -la\n')" class="app">ls</button>
+            <button onclick="sendInput('cd ..\n')" class="app">cd..</button>
+            <button onclick="sendInput('vim\n')" class="app">vim</button>
+            <button onclick="sendInput('htop\n')" class="app">htop</button>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xterm-addon-web-links@0.51.0/lib/xterm-addon-web-links.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/zmodem.js@0.1.10/dist/zmodem.min.js"></script>
+    <script>
+        // ==================== 终端初始化 ====================
+        const term = new Terminal({
+            cursorBlink: true,
+            fontSize: window.innerWidth < 480 ? 12 : 14,
+            fontFamily: 'Menlo, Monaco, "Courier New", monospace',
+            theme: {
+                background: '#0c0c0c',
+                foreground: '#cccccc',
+                cursor: '#4ade80',
+                cursorAccent: '#000',
+                selection: 'rgba(74, 222, 128, 0.3)',
+                black: '#0c0c0c',
+                red: '#ff5555',
+                green: '#4ade80',
+                yellow: '#f1fa8c',
+                blue: '#69a5f7',
+                magenta: '#bd93f9',
+                cyan: '#8be9fd',
+                white: '#cccccc',
+                brightBlack: '#666666',
+                brightRed: '#ff6e6e',
+                brightGreen: '#6eff6e',
+                brightYellow: '#ffff6e',
+                brightBlue: '#6effff',
+                brightMagenta: '#ff6eff',
+                brightCyan: '#6effff',
+                brightWhite: '#ffffff'
+            },
+            convertEol: true,
+            scrollback: 10000,
+            tabStopWidth: 4,
+            allowProposedApi: true
+        });
+        
+        const fitAddon = new FitAddon.FitAddon();
+        term.loadAddon(fitAddon);
+        term.open(document.getElementById('terminal'));
+        
+        // 初始适配
+        setTimeout(() => fitAddon.fit(), 100);
+        
+        // ==================== WebSocket 连接管理 ====================
+        let ws = null;
+        let reconnectAttempts = 0;
+        const MAX_RECONNECT_ATTEMPTS = 15;
+        let isConnecting = false;
+        let heartbeatInterval = null;
+        const HEARTBEAT_INTERVAL = 30000; // 30 秒心跳
+
+        // 指数退避配置
+        const INITIAL_RECONNECT_DELAY = 1000;  // 初始延迟 1 秒
+        const MAX_RECONNECT_DELAY = 30000;     // 最大延迟 30 秒
+        const RECONNECT_BACKOFF_MULTIPLIER = 2; // 退避倍率
+
+        function getWebSocketUrl() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const host = window.location.hostname || 'localhost';
+            const port = '9865';
+            // PRD 2.1.2: Token 通过 WebSocket 首条消息传递，不在 URL 中
+            // 但 session 参数需要通过 URL 传递，以便服务器知道要连接哪个 tmux 会话
+            const urlParams = new URLSearchParams(window.location.search);
+            const session = urlParams.get('session');
+            const wsUrl = `${protocol}//${host}:${port}`;
+            // 如果有指定会话，添加到 WebSocket URL
+            if (session) {
+                return `${wsUrl}?session=${encodeURIComponent(session)}`;
+            }
+            return wsUrl;
+        }
+
+        // PRD 2.1.2: 获取 Token（用于 WebSocket 首条消息认证）
+        // 优先级：URL参数 > localStorage > 用户提示输入
+        function getToken() {
+            const urlParams = new URLSearchParams(window.location.search);
+            let token = urlParams.get('token');
+
+            // 如果URL中有token，直接使用
+            if (token) {
+                localStorage.setItem('tmux_token', token);
+                console.log('[Token] 已从URL参数获取');
+                return token;
+            }
+
+            // 检查 localStorage
+            token = localStorage.getItem('tmux_token');
+            if (token) {
+                console.log('[Token] 已从localStorage获取');
+                return token;
+            }
+
+            // 没有 token，返回空字符串
+            return '';
+        }
+
+        // 显示 Token 输入界面
+        function showTokenInput(errorMessage) {
+            const loadingEl = document.getElementById('connectLoading');
+            const tokenAreaEl = document.getElementById('tokenInputArea');
+            const tokenErrorEl = document.getElementById('tokenError');
+
+            if (loadingEl) loadingEl.classList.add('hidden');
+            if (tokenAreaEl) tokenAreaEl.classList.remove('hidden');
+            if (errorMessage && tokenErrorEl) {
+                tokenErrorEl.textContent = errorMessage;
+                tokenErrorEl.classList.remove('hidden');
+            }
+
+            document.getElementById('connectOverlay').classList.remove('hidden');
+
+            // 聚焦输入框
+            setTimeout(() => {
+                document.getElementById('tokenInput')?.focus();
+            }, 100);
+        }
+
+        // 隐藏 Token 输入界面，显示加载中
+        function showLoading() {
+            const loadingEl = document.getElementById('connectLoading');
+            const tokenAreaEl = document.getElementById('tokenInputArea');
+
+            if (loadingEl) loadingEl.classList.remove('hidden');
+            if (tokenAreaEl) tokenAreaEl.classList.add('hidden');
+        }
+
+        // 处理 Token 提交
+        function handleTokenSubmit() {
+            const tokenInput = document.getElementById('tokenInput');
+            const token = tokenInput?.value?.trim();
+
+            if (!token) {
+                document.getElementById('tokenError').textContent = '请输入 Token';
+                document.getElementById('tokenError').classList.remove('hidden');
+                return;
+            }
+
+            // 保存 token
+            localStorage.setItem('tmux_token', token);
+
+            // 隐藏错误
+            document.getElementById('tokenError').classList.add('hidden');
+
+            // 显示加载中并开始连接
+            showLoading();
+            connect();
+        }
+
+        /**
+         * 计算指数退避延迟
+         * 公式：delay = min(INITIAL_DELAY * (MULTIPLIER ^ (attempts - 1)), MAX_DELAY)
+         * 序列：1s → 2s → 4s → 8s → 16s → 30s → 30s → ...
+         */
+        function calculateExponentialBackoff(attempts) {
+            if (attempts <= 1) {
+                return INITIAL_RECONNECT_DELAY;
+            }
+            const delay = INITIAL_RECONNECT_DELAY * Math.pow(RECONNECT_BACKOFF_MULTIPLIER, attempts - 1);
+            return Math.min(delay, MAX_RECONNECT_DELAY);
+        }
+
+        function connect() {
+            if (isConnecting) return;
+
+            // 检查是否有 token
+            const currentToken = getToken();
+            if (!currentToken) {
+                console.log('[Token] 没有可用的token，显示输入界面');
+                showTokenInput();
+                return;
+            }
+
+            isConnecting = true;
+            showLoading();
+
+            const wsUrl = getWebSocketUrl();
+            console.log('[WebSocket] 尝试连接:', wsUrl);
+
+            ws = new WebSocket(wsUrl);
+            ws.binaryType = 'arraybuffer';
+
+            ws.onopen = function() {
+                console.log('[WebSocket] 连接成功');
+                isConnecting = false;
+                reconnectAttempts = 0;
+
+                // PRD 2.1.2: 发送认证消息
+                const authMsg = {
+                    type: 'auth',
+                    token: currentToken,
+                    timestamp: Date.now()
+                };
+                ws.send(JSON.stringify(authMsg));
+                console.log('[WebSocket] 已发送认证消息');
+            };
+
+            ws.onclose = function(event) {
+                console.log('[WebSocket] 连接关闭:', event.code, event.reason);
+                isConnecting = false;
+
+                // 停止心跳
+                stopHeartbeat();
+
+                // 显示离线提示
+                showOfflineToast();
+
+                // 更新 UI
+                document.getElementById('statusDot').className = 'status-dot';
+                document.getElementById('statusText').textContent = '已断开';
+                document.getElementById('connectOverlay').classList.remove('hidden');
+
+                // 自动重连（指数退避）
+                if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+                    reconnectAttempts++;
+                    const delay = calculateExponentialBackoff(reconnectAttempts);
+                    const delaySeconds = (delay / 1000).toFixed(1);
+                    document.querySelector('.connect-text').textContent =
+                        `连接断开，${delaySeconds}秒后重连... (${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})`;
+                    console.log(`[Reconnect] ${delaySeconds}s 后重试 (attempt ${reconnectAttempts})`);
+                    setTimeout(connect, delay);
+                } else {
+                    document.querySelector('.connect-text').textContent =
+                        '连接失败，请刷新页面重试';
+                    console.error('[Reconnect] 达到最大重连次数，放弃重连');
+                }
+            };
+
+            ws.onerror = function(error) {
+                console.error('[WebSocket] 错误:', error);
+                isConnecting = false;
+            };
+            
+            ws.onmessage = function(event) {
+                if (event.data instanceof ArrayBuffer) {
+                    term.write(new Uint8Array(event.data));
+                } else if (typeof event.data === 'string') {
+                    try {
+                        const data = JSON.parse(event.data);
+
+                        if (data.type === 'auth_result') {
+                            // PRD 2.1.2: 认证结果处理
+                            if (data.success) {
+                                console.log('[Auth] 认证成功');
+                                // 隐藏离线提示
+                                hideOfflineToast();
+                                // 更新 UI
+                                document.getElementById('statusDot').className = 'status-dot connected';
+                                document.getElementById('statusText').textContent = '已连接';
+                                document.getElementById('connectOverlay').classList.add('hidden');
+                                // 发送终端大小
+                                sendTerminalSize();
+                                // 聚焦终端
+                                term.focus();
+                                // 启动心跳检测
+                                startHeartbeat();
+                                // 认证成功后立即请求会话列表
+                                refreshSessions();
+                            } else {
+                                console.error('[Auth] 认证失败:', data.message);
+                                showToast('认证失败: ' + data.message, 'error', 0);
+                                // 清除错误的 token
+                                localStorage.removeItem('tmux_token');
+                                // 显示 token 输入界面让用户重新输入
+                                showTokenInput('Token 无效或已过期，请重新输入');
+                            }
+                        } else if (data.type === 'init') {
+                            term.writeln('\r\n\x1b[32m\x1b[1m[终端已启动]\x1b[0m\r\n');
+                            // 记录服务器模式
+                            if (data.mode) {
+                                serverMode = data.mode;
+                                console.log('[Server] 模式:', data.mode);
+                            }
+                            // 如果是 tmux 模式，请求会话列表
+                            if (data.mode === 'tmux' && data.session) {
+                                // 优先使用服务器返回的会话名（与URL参数可能不同）
+                                currentSession = data.session;
+                                // 同步更新 URL 参数，确保刷新后保持一致
+                                const url = new URL(window.location.href);
+                                const urlSession = url.searchParams.get('session');
+                                if (urlSession !== data.session) {
+                                    url.searchParams.set('session', data.session);
+                                    window.history.replaceState({}, '', url.toString());
+                                    console.log('[Session] URL参数已同步为:', data.session);
+                                }
+                                refreshSessions();
+                            }
+                            // 检查是否已启用录制
+                            if (data.recording === true) {
+                                startRecording();
+                            }
+                        } else if (data.type === 'mode_fallback') {
+                            // F-003: 模式降级提示
+                            console.log('[Fallback] 从', data.from_mode, '降级到', data.to_mode);
+                            showToast(data.message, 'warning', 5000);
+                            // 记录降级状态
+                            serverMode = data.to_mode;
+                            // 更新模式指示器
+                            updateModeIndicator(data.to_mode, data.reason);
+                        } else if (data.type === 'error') {
+                            term.writeln(`\r\n\x1b[31m[错误] ${data.message}\x1b[0m\r\n`);
+                            showToast(data.message, 'error', 4000);
+                        } else if (data.type === 'auth_error') {
+                            showToast(data.message, 'error', 0);
+                        } else if (data.type === 'sessions') {
+                            // 更新会话列表
+                            renderSessionList(data.sessions, data.current);
+                        } else if (data.type === 'switch_request') {
+                            // 切换会话请求 - 需要刷新页面重连
+                            showToast(data.message || '正在切换会话...', 'info', 2000);
+                            // 立即更新 URL 参数，确保刷新后连接到正确的会话
+                            const url = new URL(window.location.href);
+                            url.searchParams.set('session', data.session);
+                            // 保留token：优先使用URL中的，否则从localStorage获取
+                            const existingToken = url.searchParams.get('token');
+                            const storedToken = localStorage.getItem('tmux_token');
+                            if (!existingToken && storedToken) {
+                                url.searchParams.set('token', storedToken);
+                            }
+                            // 使用 replaceState 先更新 URL，不刷新页面
+                            window.history.replaceState({}, '', url.toString());
+                            console.log('[Session] URL已更新为:', data.session);
+                            // 延迟刷新页面，让用户看到提示
+                            setTimeout(function() {
+                                window.location.reload();
+                            }, 1500);
+
+                        } else if (data.type === 'session_switched') {
+                            showToast('已切换到会话：' + data.session, 'success', 2000);
+                            currentSession = data.session;
+                            refreshSessions();
+                        } else if (data.type === 'recording_started') {
+                            startRecording();
+                        } else if (data.type === 'recording_stopped') {
+                            stopRecording();
+                        } else if (data.type === 'recordings') {
+                            console.log('[Recordings] 列表:', data.recordings);
+                        }
+                    } catch (e) {
+                        term.write(event.data);
+                    }
+                } else if (event.data === 'pong') {
+                    // 心跳响应
+                    console.log('[Heartbeat] 收到 pong');
+                }
+            };
+        }
+        
+        // ==================== 终端大小同步 ====================
+        // 心跳检测
+        function startHeartbeat() {
+            stopHeartbeat(); // 清除旧的
+            heartbeatInterval = setInterval(function() {
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({ type: 'ping', timestamp: Date.now() }));
+                    console.log('[Heartbeat] 发送 ping');
+                }
+            }, HEARTBEAT_INTERVAL);
+        }
+
+        function stopHeartbeat() {
+            if (heartbeatInterval) {
+                clearInterval(heartbeatInterval);
+                heartbeatInterval = null;
+            }
+        }
+
+        // 终端大小同步
+        function sendTerminalSize() {
+            const dims = fitAddon.proposeDimensions();
+            if (dims && ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'resize',
+                    rows: dims.rows,
+                    cols: dims.cols
+                }));
+                console.log('[Resize] 发送尺寸:', dims.rows, 'x', dims.cols);
+            }
+        }
+        
+        // 窗口大小变化时自动适配
+        let resizeTimeout;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                fitAddon.fit();
+                sendTerminalSize();
+            }, 250);
+        });
+        
+        // 方向变化时重新适配
+        window.addEventListener('orientationchange', function() {
+            setTimeout(() => {
+                fitAddon.fit();
+                sendTerminalSize();
+            }, 300);
+        });
+        
+        // ==================== 输入处理 ====================
+        // Toast 提示函数
+        function showToast(message, type = 'info', duration = 3000) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+
+            const icons = {
+                success: '✓',
+                error: '✕',
+                warning: '⚠',
+                info: 'ℹ'
+            };
+
+            toast.innerHTML = `
+                <span class="toast-icon">${icons[type] || icons.info}</span>
+                <span class="toast-content">${message}</span>
+                <button class="toast-close" onclick="this.parentElement.remove()">×</button>
+            `;
+
+            container.appendChild(toast);
+
+            if (duration > 0) {
+                setTimeout(() => {
+                    toast.classList.add('toast-hidden');
+                    setTimeout(() => toast.remove(), 300);
+                }, duration);
+            }
+
+            return toast;
+        }
+
+        // 离线提示
+        let offlineToast = null;
+        function showOfflineToast() {
+            if (!offlineToast) {
+                offlineToast = showToast('网络连接已断开，尝试重连中...', 'warning', 0);
+            }
+        }
+
+        function hideOfflineToast() {
+            if (offlineToast) {
+                offlineToast.classList.add('toast-hidden');
+                setTimeout(() => { if (offlineToast) offlineToast.remove(); }, 300);
+                offlineToast = null;
+            }
+        }
+
+        // 输入处理函数
+        function sendKey(data) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'input', data: data }));
+                console.log('[Input] 发送按键:', JSON.stringify(data));
+            }
+            term.focus();
+        }
+        
+        function sendInput(text) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'input', data: text }));
+                console.log('[Input] 发送命令:', text.trim());
+            }
+            term.focus();
+        }
+        
+        // 输入框发送
+        document.getElementById('sendBtn').addEventListener('click', function() {
+            const input = document.getElementById('commandInput');
+            const command = input.value;
+            if (command) {
+                sendInput(command + '\n');
+                input.value = '';
+            }
+            term.focus();
+        });
+        
+        // 输入框回车发送
+        document.getElementById('commandInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const command = this.value;
+                if (command) {
+                    sendInput(command + '\n');
+                    this.value = '';
+                }
+                term.focus();
+            }
+        });
+        
+        // 终端输入直接发送到后端
+        term.onData(function(data) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'input', data: data }));
+            }
+        });
+
+        // ==================== 会话管理 ====================
+        let allSessions = [];
+        let currentSession = '';
+        let serverMode = 'pty'; // 'pty' or 'tmux'
+
+        // F-003: 更新模式指示器
+        function updateModeIndicator(mode, reason) {
+            const modeIndicator = document.getElementById('modeIndicator');
+            if (!modeIndicator) return;
+
+            const icons = {
+                'tmux': '🔷',
+                'pty': '🟢',
+                'fallback': '⚠️'
+            };
+
+            const labels = {
+                'tmux': 'tmux 模式',
+                'pty': 'PTY 模式',
+                'fallback': '降级模式'
+            };
+
+            const modeText = labels[mode] || mode;
+            const icon = reason === 'tmux_session_failed' ? icons['fallback'] : icons[mode] || '🟢';
+
+            modeIndicator.innerHTML = `${icon} ${modeText}`;
+            modeIndicator.className = `mode-indicator mode-${mode}`;
+
+            if (reason) {
+                modeIndicator.title = reason === 'tmux_session_failed'
+                    ? 'tmux 不可用，已降级到 PTY 模式'
+                    : `模式: ${mode}`;
+            }
+        }
+
+        function toggleSessionList() {
+            const panel = document.getElementById('sessionPanel');
+            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+            // 打开面板时刷新会话列表
+            if (panel.style.display === 'block') {
+                refreshSessions();
+            }
+        }
+
+        function refreshSessions() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'list_sessions' }));
+            }
+        }
+
+        function createNewSession() {
+            const name = prompt('请输入新会话名称:');
+            if (name && name.trim()) {
+                const sessionName = name.trim().replace(/[^a-zA-Z0-9_-]/g, '');
+                if (sessionName) {
+                    if (ws && ws.readyState === WebSocket.OPEN) {
+                        // 发送创建并切换请求
+                        ws.send(JSON.stringify({ type: 'switch', session: sessionName }));
+                        showToast('正在创建会话：' + sessionName, 'info', 2000);
+                    }
+                } else {
+                    showToast('会话名只能包含字母、数字、下划线和连字符', 'warning', 3000);
+                }
+            }
+            document.getElementById('sessionPanel').style.display = 'none';
+        }
+
+        function renderSessionList(sessions, current) {
+            allSessions = sessions;
+            currentSession = current;
+            const list = document.getElementById('sessionList');
+            list.innerHTML = '';
+
+            if (sessions.length === 0) {
+                list.innerHTML = '<div style="padding:15px;text-align:center;color:#666;font-size:13px;">暂无会话</div>';
+                return;
+            }
+
+            sessions.forEach(function(session) {
+                const item = document.createElement('div');
+                item.style.cssText = 'padding:10px 15px;border-bottom:1px solid #2a2a30;cursor:pointer;font-size:13px;display:flex;justify-content:space-between;align-items:center;transition:background 0.15s;';
+                if (session === current) {
+                    item.style.background = 'rgba(74,222,128,0.1)';
+                    item.innerHTML = `<span style="color:#4ade80;">${session}</span><span style="color:#4ade80;font-size:11px;">● 当前</span>`;
+                } else {
+                    item.style.background = 'transparent';
+                    item.onmouseenter = function() { this.style.background = '#2a2a35'; };
+                    item.onmouseleave = function() { this.style.background = 'transparent'; };
+                    item.innerHTML = `<span>${session}</span>`;
+                    item.onclick = function() { switchSession(session); };
+                }
+                list.appendChild(item);
+            });
+        }
+
+        function switchSession(sessionName) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'switch', session: sessionName }));
+                showToast('正在切换到会话：' + sessionName, 'info', 1500);
+                document.getElementById('sessionPanel').style.display = 'none';
+            }
+        }
+
+        // 点击外部关闭面板
+        document.addEventListener('click', function(e) {
+            const panel = document.getElementById('sessionPanel');
+            const btn = document.getElementById('sessionBtn');
+            if (panel && !panel.contains(e.target) && !btn.contains(e.target)) {
+                panel.style.display = 'none';
+            }
+        });
+
+        // ==================== 录制控制 (v7 新增) ====================
+        let isRecording = false;
+
+        /**
+         * 切换录制状态
+         */
+        function toggleRecording() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                showToast('WebSocket 未连接', 'error');
+                return;
+            }
+
+            if (isRecording) {
+                ws.send(JSON.stringify({ type: 'stop_recording' }));
+            } else {
+                ws.send(JSON.stringify({ type: 'start_recording' }));
+            }
+        }
+
+        // ==================== 文件传输 (v7 新增 - lrzsz) ====================
+        let zmodemSession = null;
+        let isZmodemActive = false;
+
+        /**
+         * 切换文件传输面板
+         */
+        function toggleFileTransfer() {
+            const panel = document.getElementById('fileTransferPanel');
+            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+        }
+
+        /**
+         * 发送 rz 命令（上传）
+         */
+        function sendRzCommand() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'input', data: 'rz\n' }));
+                showToast('已发送 rz 命令，等待服务器响应...', 'info', 2000);
+                document.getElementById('fileTransferPanel').style.display = 'none';
+            }
+        }
+
+        /**
+         * 发送 sz 命令（下载）
+         */
+        function sendSzCommand() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'input', data: 'sz ' }));
+                showToast('已发送 sz 命令，请输入文件名', 'info', 2000);
+                document.getElementById('fileTransferPanel').style.display = 'none';
+            }
+        }
+
+        /**
+         * 检测 zmodem 传输开始
+         */
+        function detectZmodem(data) {
+            // 检测 zmodem 起始序列：**B0100000023be503**
+            if (data instanceof ArrayBuffer) {
+                const bytes = new Uint8Array(data);
+                // 检查是否包含 zmodem 起始标记
+                for (let i = 0; i < bytes.length - 8; i++) {
+                    if (bytes[i] === 0x2a && bytes[i+1] === 0x2a && // **
+                        bytes[i+2] === 0x42 &&                      // B
+                        bytes[i+3] === 0x30 && bytes[i+4] === 0x31 && // 01
+                        bytes[i+5] === 0x30 && bytes[i+6] === 0x30 && // 00
+                        bytes[i+7] === 0x30 && bytes[i+8] === 0x30    // 00
+                    ) {
+                        console.log('[Zmodem] 检测到传输开始');
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        /**
+         * 初始化 zmodem 支持
+         */
+        function initZmodem() {
+            if (typeof Zmodem !== 'undefined') {
+                console.log('[Zmodem] 已加载，版本:', Zmodem.B);
+                return true;
+            }
+            console.warn('[Zmodem] 未加载，文件传输功能不可用');
+            return false;
+        }
+
+        /**
+         * 开始录制
+         */
+        function startRecording() {
+            isRecording = true;
+            document.getElementById('recordBtn').style.color = '#ef4444';
+            document.getElementById('recordBtn').title = '停止录制';
+            document.getElementById('statusDot').className = 'status-dot recording';
+            showToast('录制已开始', 'success', 2000);
+        }
+
+        /**
+         * 停止录制
+         */
+        function stopRecording() {
+            isRecording = false;
+            document.getElementById('recordBtn').style.color = '';
+            document.getElementById('recordBtn').title = '开始录制';
+            if (document.getElementById('statusDot').classList.contains('recording')) {
+                document.getElementById('statusDot').className = 'status-dot connected';
+            }
+            showToast('录制已停止', 'success', 2000);
+        }
+
+        /**
+         * 获取录制列表
+         */
+        async function listRecordings() {
+            try {
+                const response = await fetch('/api/recordings');
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+                const data = await response.json();
+                console.log('[Recordings] 获取成功:', data.recordings);
+                return data.recordings;
+            } catch (error) {
+                console.error('[Recordings] 获取失败:', error);
+                return [];
+            }
+        }
+
+        // ==================== 启动连接 ====================
+        console.log('[App] 启动 tmux-web-term 前端');
+
+        // 绑定 Token 输入相关事件
+        document.getElementById('tokenSubmitBtn')?.addEventListener('click', handleTokenSubmit);
+        document.getElementById('tokenInput')?.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                handleTokenSubmit();
+            }
+        });
+
+        connect();
+        
+        // 页面可见性变化时重新聚焦
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                setTimeout(() => term.focus(), 100);
+            }
+        });
+    </script>
+</body>
+</html>
