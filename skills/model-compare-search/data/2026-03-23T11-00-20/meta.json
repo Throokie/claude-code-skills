@@ -1,0 +1,90 @@
+{
+  "session_id": "2026-03-23T11-00-20",
+  "timestamp": "2026-03-23T11:14:26.636Z",
+  "query": "测试改进后的多模型搜索",
+  "task_type": "通用问答 - 8模型并行",
+  "stats": {
+    "total": 8,
+    "success": 7,
+    "failed": 1,
+    "fallbacks_used": 0,
+    "success_rate": "88%",
+    "total_tokens": 9494,
+    "avg_duration_ms": 144258
+  },
+  "models": [
+    {
+      "name": "Pro/zai-org/GLM-5",
+      "success": true,
+      "duration": 39272,
+      "tokens": 1496,
+      "error": null,
+      "fallback_used": null,
+      "original_model": null
+    },
+    {
+      "name": "Pro/moonshotai/Kimi-K2.5",
+      "success": true,
+      "duration": 95922,
+      "tokens": 2277,
+      "error": null,
+      "fallback_used": null,
+      "original_model": null
+    },
+    {
+      "name": "Pro/deepseek-ai/DeepSeek-V3.2",
+      "success": true,
+      "duration": 48200,
+      "tokens": 1678,
+      "error": null,
+      "fallback_used": null,
+      "original_model": null
+    },
+    {
+      "name": "Pro/MiniMaxAI/MiniMax-M2.5",
+      "success": true,
+      "duration": 48508,
+      "tokens": 338,
+      "error": null,
+      "fallback_used": null,
+      "original_model": null
+    },
+    {
+      "name": "Doubao-Seed-2.0-pro",
+      "success": true,
+      "duration": 24124,
+      "tokens": 1011,
+      "error": null,
+      "fallback_used": null,
+      "original_model": null
+    },
+    {
+      "name": "LoRA/Qwen/Qwen2.5-72B-Instruct",
+      "success": true,
+      "duration": 3927,
+      "tokens": 145,
+      "error": null,
+      "fallback_used": null,
+      "original_model": null
+    },
+    {
+      "name": "Pro/deepseek-ai/DeepSeek-R1",
+      "success": true,
+      "duration": 749851,
+      "tokens": 2549,
+      "error": null,
+      "fallback_used": null,
+      "original_model": null
+    },
+    {
+      "name": "Pro/Qwen/Qwen2.5-72B-Instruct",
+      "success": false,
+      "duration": 3046,
+      "tokens": 0,
+      "error": "HTTP 503: No available channel for model Pro/Qwen/Qwen2.5-72B-Instruct under group default (distributor) (request id: 20260323110159823406137dltxPwZr)",
+      "fallback_used": null,
+      "original_model": null
+    }
+  ],
+  "kimi_summary_available": false
+}

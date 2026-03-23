@@ -1,0 +1,5 @@
+# 技能工作目录
+requirement-to-prd-workspace/
+
+# 测试生成的 PRD（这些应该由用户决定是否提交）
+*.log

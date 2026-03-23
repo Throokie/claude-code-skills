@@ -1,0 +1,9 @@
+{
+  "model": "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B",
+  "success": true,
+  "duration_ms": 90440,
+  "tokens": 2035,
+  "attempts": 3,
+  "timestamp": "2026-03-23T10:56:22.758Z",
+  "error": null
+}

@@ -1,0 +1,83 @@
+{
+  "version": "1.0.0",
+  "scenarios": {
+    "bug-fix": {
+      "name": "Bug 修复",
+      "signals": ["报错", "error", "failed", "不工作", "bug", "异常", "崩溃", "fix", "修复", "调试"],
+      "priority": "high",
+      "estimatedTokens": 800,
+      "recommendedModel": "Sonnet 4.6"
+    },
+    "feature-implementation": {
+      "name": "功能实现",
+      "signals": ["实现", "添加", "create", "build", "新功能", "feature", "add"],
+      "priority": "high",
+      "estimatedTokens": 1200,
+      "recommendedModel": "Sonnet 4.6"
+    },
+    "research-exploration": {
+      "name": "研究探索",
+      "signals": ["怎么", "如何", "how to", "了解", "学习", "原理", "what is"],
+      "priority": "medium",
+      "estimatedTokens": 1000,
+      "recommendedModel": "Sonnet 4.6"
+    },
+    "code-review": {
+      "name": "代码审查",
+      "signals": ["review", "审查", "检查", "audit", "code quality"],
+      "priority": "medium",
+      "estimatedTokens": 600,
+      "recommendedModel": "Sonnet 4.6"
+    },
+    "performance-optimization": {
+      "name": "性能优化",
+      "signals": ["优化", "performance", "slow", "慢", "加速"],
+      "priority": "high",
+      "estimatedTokens": 1000,
+      "recommendedModel": "Sonnet 4.6"
+    },
+    "documentation": {
+      "name": "文档编写",
+      "signals": ["文档", "doc", "readme", "注释", "comment"],
+      "priority": "low",
+      "estimatedTokens": 800,
+      "recommendedModel": "Sonnet 4.6"
+    },
+    "project-start": {
+      "name": "项目启动",
+      "signals": ["新项目", "new project", "初始化", "从零开始"],
+      "priority": "high",
+      "estimatedTokens": 1500,
+      "recommendedModel": "Opus 4.6"
+    },
+    "blocked-stuck": {
+      "name": "排除阻塞",
+      "signals": ["卡住", "stuck", "blocked", "实现不了", "不会"],
+      "priority": "high",
+      "estimatedTokens": 800,
+      "recommendedModel": "Sonnet 4.6"
+    }
+  },
+  "modelRouting": {
+    "simple": {
+      "scopes": ["TRIVIAL", "LOW"],
+      "model": "Sonnet 4.6",
+      "reason": "Fast and efficient for simple tasks"
+    },
+    "medium": {
+      "scopes": ["MEDIUM"],
+      "model": "Sonnet 4.6",
+      "reason": "Best coding model for standard work"
+    },
+    "complex": {
+      "scopes": ["HIGH", "EPIC"],
+      "model": "Opus 4.6",
+      "reason": "Deep reasoning for complex tasks"
+    }
+  },
+  "qualityThresholds": {
+    "minClarityScore": 70,
+    "minContextScore": 60,
+    "minActionableScore": 75
+  }
+}

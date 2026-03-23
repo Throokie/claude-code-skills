@@ -1,0 +1,59 @@
+{
+  "session_id": "2026-03-23T10-21-55",
+  "timestamp": "2026-03-23T10:30:32.908Z",
+  "query": "WebSocket自动重连最佳实践 指数退避算法 用户认证失败处理",
+  "task_type": "代码生成/调试类任务",
+  "stats": {
+    "total": 6,
+    "success": 6,
+    "failed": 0,
+    "success_rate": "100%",
+    "total_tokens": 19685,
+    "avg_duration_ms": 110779
+  },
+  "models": [
+    {
+      "name": "Pro/deepseek-ai/DeepSeek-V3.2",
+      "success": true,
+      "duration": 152602,
+      "tokens": 6862,
+      "error": null
+    },
+    {
+      "name": "Pro/deepseek-ai/DeepSeek-R1",
+      "success": true,
+      "duration": 149142,
+      "tokens": 2561,
+      "error": null
+    },
+    {
+      "name": "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B",
+      "success": true,
+      "duration": 52383,
+      "tokens": 2101,
+      "error": null
+    },
+    {
+      "name": "Pro/zai-org/GLM-5",
+      "success": true,
+      "duration": 78213,
+      "tokens": 3447,
+      "error": null
+    },
+    {
+      "name": "Pro/moonshotai/Kimi-K2.5",
+      "success": true,
+      "duration": 193377,
+      "tokens": 3504,
+      "error": null
+    },
+    {
+      "name": "LoRA/Qwen/Qwen2.5-72B-Instruct",
+      "success": true,
+      "duration": 38959,
+      "tokens": 1210,
+      "error": null
+    }
+  ],
+  "kimi_summary_available": true
+}

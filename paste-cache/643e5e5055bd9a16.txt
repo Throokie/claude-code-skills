@@ -1,0 +1,56 @@
+agnostics
+  └ Currently running: npm-global (2.1.81)
+  └ Path: /usr/bin/node
+  └ Invoked: /home/throokie/.npm-global/bin/claude
+  └ Config install method: global
+  └ Search: OK (vendor)
+  Updates
+  └ Auto-updates: enabled
+  └ Update permissions: Yes
+  └ Auto-update channel: latest
+  └ Stable version: 2.1.74
+  └ Latest version: 2.1.81
+
+  MCP Config Diagnostics
+
+  For help configuring MCP servers, see: https://code.claude.com/docs/en/mcp
+
+  [Failed to parse] Local config (private to you in this project)
+  Location: /home/throokie/.claude.json [project: /home/throokie]
+   └ [Error] mcpServers.allowedTools: Does not adhere to MCP server configuration schema
+   └ [Error] mcpServers.disabledMcpjsonServers: Does not adhere to MCP server configuration schema
+   └ [Error] mcpServers.enabledMcpjsonServers: Does not adhere to MCP server configuration schema
+   └ [Error] mcpServers.exampleFiles: Does not adhere to MCP server configuration schema
+   └ [Error] mcpServers.hasClaudeMdExternalIncludesApproved: Does not adhere to MCP server configuration schema
+   └ [Error] mcpServers.hasClaudeMdExternalIncludesWarningShown: Does not adhere to MCP server configuration schema
+   └ [Error] mcpServers.hasCompletedProjectOnboarding: Does not adhere to MCP server configuration schema
+   └ [Error] mcpServers.hasTrustDialogAccepted: Does not adhere to MCP server configuration schema
+   └ [Error] mcpServers.lastAPIDuration: Does not adhere to MCP server configuration schema
+   └ [Error] mcpServers.lastAPIDurationWithoutRetries: Does not adhere to MCP server configuration schema
+   └ [Error] mcpServers.lastCost: Does not adhere to MCP server configuration schema
+   └ [Error] mcpServers.lastDuration: Does not adhere to MCP server configuration schema
+   └ [Error] mcpServers.lastLinesAdded: Does not adhere to MCP server configuration schema
+   └ [Error] mcpServers.lastLinesRemoved: Does not adhere to MCP server configuration schema
+   └ [Error] mcpServers.lastModelUsage: Does not adhere to MCP server configuration schema
+   └ [Error] mcpServers.lastSessionId: Does not adhere to MCP server configuration schema
+   └ [Error] mcpServers.lastSessionMetrics: Does not adhere to MCP server configuration schema
+   └ [Error] mcpServers.lastToolDuration: Does not adhere to MCP server configuration schema
+   └ [Error] mcpServers.lastTotalCacheCreationInputTokens: Does not adhere to MCP server configuration schema
+   └ [Error] mcpServers.lastTotalCacheReadInputTokens: Does not adhere to MCP server configuration schema
+   └ [Error] mcpServers.lastTotalInputTokens: Does not adhere to MCP server configuration schema
+   └ [Error] mcpServers.lastTotalOutputTokens: Does not adhere to MCP server configuration schema
+   └ [Error] mcpServers.lastTotalWebSearchRequests: Does not adhere to MCP server configuration schema
+   └ [Error] mcpServers.mcpContextUris: Does not adhere to MCP server configuration schema
+   └ [Error] mcpServers.mcpServers: Does not adhere to MCP server configuration schema
+   └ [Error] mcpServers.projectOnboardingSeenCount: Does not adhere to MCP server configuration schema
+   └ [Error] mcpServers.activeWorktreeSession: Does not adhere to MCP server configuration schema
+   └ [Error] mcpServers.exampleFilesGeneratedAt: Does not adhere to MCP server configuration schema
+   └ [Error] mcpServers.lastFpsAverage: Does not adhere to MCP server configuration schema
+   └ [Error] mcpServers.lastFpsLow1Pct: Does not adhere to MCP server configuration schema
+
+  Version Locks
+  └ No active version locks
+  Plugin Errors
+  └ 1 plugin error(s) detected:
+    └ ralph-wiggum@local: Plugin ralph-wiggum not found in marketplace local
+  Press Enter to continue…

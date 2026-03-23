@@ -1,0 +1,5 @@
+.DS_Store
+.enterprise-test-reports/
+*.log
+*.tmp
+nohup.out

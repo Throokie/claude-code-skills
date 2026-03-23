@@ -1,0 +1,26 @@
+{
+  "skill_name": "th-deep-coder",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "多模型研究代码：分析这个项目的整体架构设计，指出优缺点",
+      "expected_output": "应该自动压缩当前代码库，然后调用model-compare-search进行多模型分析，最后生成包含各模型观点的Markdown报告",
+      "files": [],
+      "assertions": []
+    },
+    {
+      "id": 2,
+      "prompt": "深度分析代码：最近提交的auth模块有安全问题吗",
+      "expected_output": "应该使用Git差异模式，只分析最近修改的文件，然后进行多模型安全审计",
+      "files": [],
+      "assertions": []
+    },
+    {
+      "id": 3,
+      "prompt": "聚合研究代码：src/utils/helpers.js这个文件为什么性能这么差",
+      "expected_output": "应该只压缩指定文件，然后进行多模型性能分析",
+      "files": ["src/utils/helpers.js"],
+      "assertions": []
+    }
+  ]
+}

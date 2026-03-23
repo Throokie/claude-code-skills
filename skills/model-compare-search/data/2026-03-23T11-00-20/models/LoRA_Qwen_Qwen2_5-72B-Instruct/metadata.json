@@ -1,0 +1,11 @@
+{
+  "model": "LoRA/Qwen/Qwen2.5-72B-Instruct",
+  "success": true,
+  "duration_ms": 3927,
+  "tokens": 145,
+  "attempts": 1,
+  "timestamp": "2026-03-23T11:14:26.635Z",
+  "error": null,
+  "fallback_used": null,
+  "original_model": null
+}

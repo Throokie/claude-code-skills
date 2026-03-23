@@ -1,0 +1,73 @@
+**结论**
+
+`docs/prd.md` 和当前项目是“部分对应”，核心终端、tmux、认证、重连这些主链路基本对上了；但 PRD 把若干“未完成/半成品/已知 bug”写成了“已完成”，尤其是 PWA、WSS、Docker、文件传输和会话状态这几块，存在明显偏差。
+
+**高优先级不对应 / 明显不足**
+
+1. `WSS` 在 PRD 中标为“已完成”，代码实际上没有真正启动 WSS 服务。  
+   在 [server.py](/home/throokie/src/production/tmux-web-term/server.py#L1119) 里只启动了一个 `websockets.serve(... ssl=None)`，但 [server.py](/home/throokie/src/production/tmux-web-term/server.py#L1129) 又直接打印“WSS 服务器已启动”。这属于功能和日志都不一致。
+
+2. `PWA 离线缓存` 在 PRD 中标为“已完成”，实际并未完成。  
+   [manifest.json](/home/throokie/src/production/tmux-web-term/manifest.json#L5) 的 `start_url` 指向 `/frontend/mobile.html`，但仓库里没有这个文件；我也确认了 `sw.js`、`favicon.png`、`frontend/mobile.html` 都不存在。前端里也没有 `navigator.serviceWorker.register(...)`。这说明目前只有 manifest 壳子，没有可工作的 PWA。
+
+3. `Docker 一键部署` 在 PRD 中标为“已完成”，但 Dockerfile 当前就会因目录不匹配而失败。  
+   [Dockerfile](/home/throokie/src/production/tmux-web-term/Dockerfile#L17) 里 `COPY frontend/ ./frontend/`，而当前仓库根本没有 `frontend/` 目录，只有根目录的 [index.html](/home/throokie/src/production/tmux-web-term/index.html)。这不是体验问题，是构建级阻塞。
+
+4. `tmux 会话管理` 没达到 PRD 的验收标准。  
+   PRD 要求“显示当前在线设备数量”([docs/prd.md](/home/throokie/src/production/tmux-web-term/docs/prd.md#L79))，当前前后端都没有在线人数统计逻辑；搜索代码也没有 `session_count` 或同类实现。这个需求没有落地。
+
+5. `文件传输 (rz/sz)` 更像 UI 占位，不是完整实现。  
+   前端确实有按钮和 `zmodem.js` 引入([index.html](/home/throokie/src/production/tmux-web-term/index.html#L1266))，但当前只是发送 `rz\n` / `sz ` 到终端([index.html](/home/throokie/src/production/tmux-web-term/index.html#L1281))，没有把 zmodem 协议流接入 websocket 读写，也没有上传/下载流程管理。`detectZmodem()` 和 `initZmodem()` 定义了但没接到消息处理链路里。PRD 把它写成“已完成”过头了。
+
+6. `会话切换` 仍然是“刷新重连式切换”，不是 PRD 描述的平滑切换。  
+   后端收到 `switch` 后只是回发 `switch_request`，让前端刷新页面([server.py](/home/throokie/src/production/tmux-web-term/server.py#L879), [index.html](/home/throokie/src/production/tmux-web-term/index.html#L935))。PRD 自己也承认这里有状态混乱 bug([docs/prd.md](/home/throokie/src/production/tmux-web-term/docs/prd.md#L96))，所以这一项不应算“已完成”。
+
+**中优先级问题**
+
+1. `模式回退策略` 后端主逻辑已补上，但前端状态展示没有完整闭环。  
+   后端在 tmux 创建失败时会发 `mode_fallback` 并降级到 PTY([server.py](/home/throokie/src/production/tmux-web-term/server.py#L745))，这一点比 PRD 的 Bug-001 描述更新。  
+   但普通 `init` 成功时前端没有调用 `updateModeIndicator()`，所以不是每次都明确显示当前模式；PRD 要的“始终显示模式图标”没有完全落实。
+
+2. `currentSession 状态漂移` 只修了一半。  
+   前端在 `init` 时会把服务端 session 回写到 URL([index.html](/home/throokie/src/production/tmux-web-term/index.html#L902))，比 PRD 里说的旧逻辑更进一步。  
+   但初始化阶段没有实现“URL > localStorage > 默认值”的统一 session 来源策略，`localStorage` 里实际上也没存 session，因此 PRD 的 Bug-003 不能算彻底解决。
+
+3. 录制功能有接口，但实现方式有风险。  
+   `asciinema rec --command <shell>` 是新起一个 shell 录制，不是附着当前 tmux/pty 的真实会话上下文([server.py](/home/throokie/src/production/tmux-web-term/server.py#L475))。这意味着“录制当前会话”这个产品语义，和实现可能不一致。
+
+4. 配置与文档存在漂移。  
+   PRD 附录里有 `fallback_to_pty` 配置([docs/prd.md](/home/throokie/src/production/tmux-web-term/docs/prd.md#L272))，但服务端配置结构里没有这个字段；现在是默认总会 fallback。说明文档和代码没统一。
+
+**相对对应得比较好的部分**
+
+- WebSocket 终端连接：`pty` / `tmux` 双模式主流程存在。
+- tmux 多设备同屏：`attach-session` 没带 `-d`，这点与 PRD 一致([server.py](/home/throokie/src/production/tmux-web-term/server.py#L762))。
+- Token 认证 + IP 白名单：基本有实现。
+- 指数退避重连：前端实现是完整的。
+- 健康检查：`/health` 已实现。
+- 内网穿透支持：更偏部署/使用方式，代码里主要体现在监听配置与脚本支持，这部分不能算缺失。
+
+**文档本身的问题**
+
+PRD 现在最大的问题不是“写得不全”，而是“状态定义不准”：
+
+- 一边把 F-003 标记为“✅ 已实现”([docs/prd.md](/home/throokie/src/production/tmux-web-term/docs/prd.md#L60))，一边验收标准全部还是未勾选([docs/prd.md](/home/throokie/src/production/tmux-web-term/docs/prd.md#L109))。
+- 一边把多个 v7 功能标“✅ 已完成”，一边仓库缺少对应文件或只有部分 UI。
+- 文档中多处引用的旧目录结构 `frontend/` 与当前仓库根目录结构不一致。
+
+**综合判断**
+
+如果按“核心可用”评估，这个项目已经有一个可工作的雏形。  
+如果按 PRD 当前写法评估，项目还没有达到 PRD 宣称的完成度，尤其是：
+
+- PWA：未完成
+- WSS：未完成
+- Docker 一键部署：未完成
+- 文件传输：未完成
+- 在线设备数：未完成
+- 会话切换平滑性：未完成
+
+如果你愿意，我下一步可以直接帮你做两件事中的一个：
+
+1. 先修 `docs/prd.md`，把状态改成和现状一致，形成真实基线。  
+2. 直接按优先级补代码，我建议顺序是 `Docker/WSS -> PWA -> 会话状态/在线人数 -> 文件传输真落地`。

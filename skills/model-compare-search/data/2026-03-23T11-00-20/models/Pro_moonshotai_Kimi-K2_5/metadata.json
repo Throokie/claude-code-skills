@@ -1,0 +1,11 @@
+{
+  "model": "Pro/moonshotai/Kimi-K2.5",
+  "success": true,
+  "duration_ms": 95922,
+  "tokens": 2277,
+  "attempts": 1,
+  "timestamp": "2026-03-23T11:01:56.778Z",
+  "error": null,
+  "fallback_used": null,
+  "original_model": null
+}

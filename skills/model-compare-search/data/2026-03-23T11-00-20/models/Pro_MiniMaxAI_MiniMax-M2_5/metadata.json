@@ -1,0 +1,11 @@
+{
+  "model": "Pro/MiniMaxAI/MiniMax-M2.5",
+  "success": true,
+  "duration_ms": 48508,
+  "tokens": 338,
+  "attempts": 1,
+  "timestamp": "2026-03-23T11:01:56.779Z",
+  "error": null,
+  "fallback_used": null,
+  "original_model": null
+}

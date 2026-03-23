@@ -1,0 +1,9 @@
+{
+  "model": "Pro/zai-org/GLM-4.7",
+  "success": true,
+  "duration_ms": 51561,
+  "tokens": 3085,
+  "attempts": 1,
+  "timestamp": "2026-03-23T10:39:17.294Z",
+  "error": null
+}

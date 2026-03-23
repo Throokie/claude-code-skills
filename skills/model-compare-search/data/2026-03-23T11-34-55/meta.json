@@ -1,0 +1,70 @@
+{
+  "session_id": "2026-03-23T11-34-55",
+  "timestamp": "2026-03-23T11:50:11.357Z",
+  "query": "测试简化版",
+  "stats": {
+    "total": 8,
+    "success": 4,
+    "failed": 4,
+    "total_tokens": 1445,
+    "avg_duration": 13611
+  },
+  "models": [
+    {
+      "name": "Qwen/Qwen3-Coder-480B-A35B-Instruct",
+      "success": false,
+      "duration": 4155,
+      "tokens": 0,
+      "original": null
+    },
+    {
+      "name": "Qwen3-Coder-480B-A35B-Instruct",
+      "success": false,
+      "duration": 3405,
+      "tokens": 0,
+      "original": null
+    },
+    {
+      "name": "Qwen/Qwen3.5-397B-A17B",
+      "success": true,
+      "duration": 10897,
+      "tokens": 384,
+      "original": null
+    },
+    {
+      "name": "Qwen3.5-397B-A17B",
+      "success": true,
+      "duration": 4744,
+      "tokens": 55,
+      "original": null
+    },
+    {
+      "name": "Qwen/Qwen3-235B-A22B-Thinking-2507",
+      "success": true,
+      "duration": 33622,
+      "tokens": 904,
+      "original": null
+    },
+    {
+      "name": "Qwen/Qwen3-VL-235B-A22B-Thinking",
+      "success": false,
+      "duration": 904722,
+      "tokens": 0,
+      "original": null
+    },
+    {
+      "name": "Qwen3-235B-A22B-Thinking-2507",
+      "success": false,
+      "duration": 3235,
+      "tokens": 0,
+      "original": null
+    },
+    {
+      "name": "Qwen/Qwen3-235B-A22B-Instruct-2507",
+      "success": true,
+      "duration": 5181,
+      "tokens": 102,
+      "original": null
+    }
+  ]
+}

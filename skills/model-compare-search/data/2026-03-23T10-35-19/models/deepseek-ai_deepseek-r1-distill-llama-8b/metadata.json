@@ -1,0 +1,9 @@
+{
+  "model": "deepseek-ai/deepseek-r1-distill-llama-8b",
+  "success": true,
+  "duration_ms": 31527,
+  "tokens": 1472,
+  "attempts": 1,
+  "timestamp": "2026-03-23T10:38:25.723Z",
+  "error": null
+}

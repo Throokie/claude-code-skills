@@ -1,0 +1,59 @@
+{
+  "sources": {
+    "google": {
+      "name": "Google Search",
+      "command": "google-search",
+      "enabled": true,
+      "timeout": 15,
+      "priority": 1,
+      "description": "通过 Serper API 搜索 Google"
+    },
+    "web": {
+      "name": "DuckDuckGo Search",
+      "command": "web-search",
+      "enabled": true,
+      "timeout": 15,
+      "priority": 1,
+      "description": "通过 ddgs 搜索 DuckDuckGo"
+    },
+    "curl": {
+      "name": "HTTP API",
+      "command": "curl",
+      "enabled": true,
+      "timeout": 10,
+      "priority": 2,
+      "description": "直接 HTTP 请求获取网页/API"
+    },
+    "git": {
+      "name": "Git Search",
+      "command": "git",
+      "enabled": true,
+      "timeout": 10,
+      "priority": 3,
+      "description": "搜索 Git 历史、分支、标签"
+    },
+    "file": {
+      "name": "File Search",
+      "command": "exa",
+      "fallback": "find",
+      "enabled": true,
+      "timeout": 5,
+      "priority": 3,
+      "description": "搜索本地文件系统 (exa/find)"
+    },
+    "gh": {
+      "name": "GitHub CLI",
+      "command": "gh",
+      "enabled": true,
+      "timeout": 10,
+      "priority": 2,
+      "description": "搜索 GitHub issues、PRs、仓库"
+    }
+  },
+  "defaults": {
+    "count": 5,
+    "timeout": 30,
+    "format": "terminal",
+    "parallel": false
+  }
+}

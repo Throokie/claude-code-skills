@@ -1,0 +1,59 @@
+{
+  "session_id": "2026-03-23T10-53-27",
+  "timestamp": "2026-03-23T10:59:31.366Z",
+  "query": "移动端下拉面板设计最佳实践 响应式高度 触控友好 会话列表",
+  "task_type": "代码生成/调试类任务",
+  "stats": {
+    "total": 6,
+    "success": 6,
+    "failed": 0,
+    "success_rate": "100%",
+    "total_tokens": 16768,
+    "avg_duration_ms": 99166
+  },
+  "models": [
+    {
+      "name": "Pro/deepseek-ai/DeepSeek-V3.2",
+      "success": true,
+      "duration": 157863,
+      "tokens": 6581,
+      "error": null
+    },
+    {
+      "name": "Pro/deepseek-ai/DeepSeek-R1",
+      "success": true,
+      "duration": 175394,
+      "tokens": 2748,
+      "error": null
+    },
+    {
+      "name": "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B",
+      "success": true,
+      "duration": 90440,
+      "tokens": 2035,
+      "error": null
+    },
+    {
+      "name": "Pro/zai-org/GLM-5",
+      "success": true,
+      "duration": 72344,
+      "tokens": 2863,
+      "error": null
+    },
+    {
+      "name": "Pro/moonshotai/Kimi-K2.5",
+      "success": true,
+      "duration": 69099,
+      "tokens": 1781,
+      "error": null
+    },
+    {
+      "name": "LoRA/Qwen/Qwen2.5-72B-Instruct",
+      "success": true,
+      "duration": 29853,
+      "tokens": 760,
+      "error": null
+    }
+  ],
+  "kimi_summary_available": true
+}

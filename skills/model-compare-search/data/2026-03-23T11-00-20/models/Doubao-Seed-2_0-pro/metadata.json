@@ -1,0 +1,11 @@
+{
+  "model": "Doubao-Seed-2.0-pro",
+  "success": true,
+  "duration_ms": 24124,
+  "tokens": 1011,
+  "attempts": 1,
+  "timestamp": "2026-03-23T11:14:26.634Z",
+  "error": null,
+  "fallback_used": null,
+  "original_model": null
+}

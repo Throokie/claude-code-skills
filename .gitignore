@@ -1,0 +1,29 @@
+# Claude Code 自动生成的文件（不跟踪）
+cache/
+sessions/
+logs/
+file-history/
+history.jsonl
+shell-snapshots/
+session-env/
+backups/
+plugins/
+mcp-servers/
+memory/
+
+# 项目历史记录（大文件）
+projects/
+telemetry/
+timebox/
+worktrees/
+subagents/
+tasks/
+teams/
+
+# 大文件和临时文件
+*.backup*
+*.corrupted*
+history/
+
+# 可选：如果通过 src-link 管理 skills，可以不跟踪
+# skills/

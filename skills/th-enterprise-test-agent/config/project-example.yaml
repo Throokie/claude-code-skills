@@ -1,0 +1,57 @@
+# 企业级测试Agent项目配置
+
+# 项目类型: web | api | cli | desktop
+type: web
+
+# 入口文件
+entry: ./src/index.ts
+
+# 构建命令
+build: npm run build
+
+# 测试命令
+test: npm test
+
+# 开发服务器启动
+dev: npm run dev
+dev_port: 3000
+
+# 测试排除目录
+exclude:
+  - "**/node_modules/**"
+  - "**/*.test.ts"
+  - "**/dist/**"
+  - "**/build/**"
+  - "**/.git/**"
+
+# 覆盖特定配置
+override:
+  # 降低覆盖率要求（如果有特殊情况）
+  coverage:
+    threshold: 80
+
+  # 忽略特定漏洞
+  security:
+    ignore:
+      - "CVE-2023-1234"
+      - "GHSA-xxxx-xxxx-xxxx"
+
+# E2E测试配置
+e2e:
+  baseUrl: http://localhost:3000
+  testFiles:
+    - "./e2e/login.spec.ts"
+    - "./e2e/checkout.spec.ts"
+  skip:
+    - "./e2e/admin.spec.ts"  # 暂时跳过
+
+# API测试配置 (如果是API项目)
+api:
+  baseUrl: http://localhost:8080
+  spec: ./openapi.yaml
+
+# 性能测试阈值
+performance:
+  lcp: 2500  # Largest Contentful Paint (ms)
+  fid: 100   # First Input Delay (ms)
+  cls: 0.1   # Cumulative Layout Shift

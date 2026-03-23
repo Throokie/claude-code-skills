@@ -1,0 +1,11 @@
+{
+  "model": "Pro/zai-org/GLM-5",
+  "success": true,
+  "duration_ms": 39272,
+  "tokens": 1496,
+  "attempts": 1,
+  "timestamp": "2026-03-23T11:01:56.777Z",
+  "error": null,
+  "fallback_used": null,
+  "original_model": null
+}

@@ -1,0 +1,9 @@
+{
+  "model": "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",
+  "success": false,
+  "duration_ms": 3658,
+  "tokens": 0,
+  "attempts": 3,
+  "timestamp": "2026-03-23T10:39:17.293Z",
+  "error": "HTTP 404: openai_error"
+}

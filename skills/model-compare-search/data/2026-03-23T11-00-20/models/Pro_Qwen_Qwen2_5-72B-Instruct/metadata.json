@@ -1,0 +1,11 @@
+{
+  "model": "Pro/Qwen/Qwen2.5-72B-Instruct",
+  "success": false,
+  "duration_ms": 3046,
+  "tokens": 0,
+  "attempts": 3,
+  "timestamp": "2026-03-23T11:14:26.635Z",
+  "error": "HTTP 503: No available channel for model Pro/Qwen/Qwen2.5-72B-Instruct under group default (distributor) (request id: 20260323110159823406137dltxPwZr)",
+  "fallback_used": null,
+  "original_model": null
+}

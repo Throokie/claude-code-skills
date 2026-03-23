@@ -1,0 +1,26 @@
+{
+  "skill_name": "requirement-to-prd",
+  "evals": [
+    {
+      "id": 1,
+      "name": "simple-task-management",
+      "prompt": "帮我生成一个任务管理系统的PRD。这个系统是给小型团队用的，需要支持任务创建、分配、优先级设置和截止日期。技术栈想用React + Node.js。",
+      "expected_output": "完整的PRD文档，包含功能需求、技术方案、UI设计等章节",
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "feature-list-input",
+      "prompt": "写个PRD，功能包括：1.用户登录（支持手机号验证码）2.个人资料管理 3.消息通知 4.数据导出。这是一个移动优先的App。",
+      "expected_output": "从功能清单转换为结构化PRD，包含详细的功能描述和验收标准",
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "user-story-input",
+      "prompt": "作为一个电商平台的运营人员，我想要一个数据分析仪表盘，以便实时监控销售数据和库存状态。",
+      "expected_output": "从用户故事提取需求并生成PRD，包含数据可视化需求和关键指标定义",
+      "files": []
+    }
+  ]
+}

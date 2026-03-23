@@ -1,0 +1,49 @@
+{
+  "session_id": "2026-03-23T12-10-04",
+  "timestamp": "2026-03-23T12:10:10.906Z",
+  "query": "移动端Web应用状态栏文本截断处理 CSS text-overflow ellipsis flex布局溢出处理 响应式设计最佳实践",
+  "stats": {
+    "total": 5,
+    "success": 0,
+    "failed": 5,
+    "total_tokens": 0,
+    "avg_duration": 0
+  },
+  "models": [
+    {
+      "name": "Pro/zai-org/GLM-5",
+      "success": false,
+      "duration": 3065,
+      "tokens": 0,
+      "original": null
+    },
+    {
+      "name": "Pro/moonshotai/Kimi-K2.5",
+      "success": false,
+      "duration": 3063,
+      "tokens": 0,
+      "original": null
+    },
+    {
+      "name": "Pro/deepseek-ai/DeepSeek-V3.2",
+      "success": false,
+      "duration": 3062,
+      "tokens": 0,
+      "original": null
+    },
+    {
+      "name": "Pro/deepseek-ai/DeepSeek-R1",
+      "success": false,
+      "duration": 3063,
+      "tokens": 0,
+      "original": null
+    },
+    {
+      "name": "LoRA/Qwen/Qwen2.5-72B-Instruct",
+      "success": false,
+      "duration": 3015,
+      "tokens": 0,
+      "original": null
+    }
+  ]
+}

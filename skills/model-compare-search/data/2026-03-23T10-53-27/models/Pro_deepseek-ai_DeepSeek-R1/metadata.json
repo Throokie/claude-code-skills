@@ -1,0 +1,9 @@
+{
+  "model": "Pro/deepseek-ai/DeepSeek-R1",
+  "success": true,
+  "duration_ms": 175394,
+  "tokens": 2748,
+  "attempts": 1,
+  "timestamp": "2026-03-23T10:56:22.758Z",
+  "error": null
+}

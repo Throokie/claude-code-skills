@@ -1,0 +1,29 @@
+{
+  "alwaysThinkingEnabled": true,
+  "auto_approve_patterns": [
+    "^read_file$",
+    "^write_file$",
+    "^edit_file$",
+    "^glob$",
+    "^grep$"
+  ],
+  "bypassPermissions": true,
+  "env": {
+    "ANTHROPIC_AUTH_TOKEN": "PROXY_MANAGED",
+    "ANTHROPIC_BASE_URL": "http://127.0.0.1:15721",
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  },
+  "features": {
+    "diff_enabled": true,
+    "inline_search": true,
+    "todo_list": true
+  },
+  "model": "kimi-k2.5",
+  "permissions": {
+    "allow": [],
+    "defaultMode": "bypassPermissions",
+    "deny": []
+  },
+  "skipDangerousModePermissionPrompt": true,
+  "effortLevel": "high"
+}
