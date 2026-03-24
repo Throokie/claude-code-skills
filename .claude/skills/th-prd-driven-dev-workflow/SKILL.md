@@ -6,6 +6,8 @@ description: >-
   "多模型分析后自动开发"、"完整开发流程"、"从需求分析到测试"或任何涉及
   PRD分析→需求整合→代码生成→自动化测试的连续工作时，**必须**使用此技能。
   整合多模型聚合、Kimi深度整合、PRD生成、多模型代码审查、代码开发、自动化测试等能力。
+  **新增**: 智能决策大脑(th-workflow-decision-engine) - 自动判断何时使用GitNexus代码分析、
+  unified-search联网搜索、多模型聚合，测试失败时智能选择修复策略。
 triggers:
   - PRD驱动开发
   - 端到端开发流程
@@ -470,6 +472,43 @@ console.log('[PHASE_COMPLETE] P4')
 
 ## 阶段5: 代码审查准备
 
+### 5.0 智能工具选择（决策大脑）
+
+```javascript
+// 调用决策大脑，智能选择代码审查工具
+const reviewDecision = await Skill({
+  name: "th-workflow-decision-engine",
+  args: JSON.stringify({
+    phase: 5,
+    task: "代码审查工具选择",
+    context: {
+      files: changedFiles,  // git diff 获取的变更文件
+      hasExternalDeps: true,  // 是否涉及外部依赖
+      hasSharedCode: changedFiles.length > 3  // 是否涉及多处共享代码
+    }
+  })
+});
+
+// 根据决策执行相应的分析
+if (reviewDecision.tools.includes('th-gitnexus-assistant')) {
+  console.log("🧠 决策: 执行代码影响分析...");
+  // 对关键函数执行影响分析
+  await mcp__gitnexus__impact({
+    target: "关键函数名",
+    direction: "upstream",
+    maxDepth: 3
+  });
+}
+
+if (reviewDecision.tools.includes('unified-search')) {
+  console.log("🔍 决策: 搜索最佳实践...");
+  await Skill({
+    name: "unified-search",
+    args: `${reviewDecision.searchQuery || "代码审查最佳实践"} --sources github,docs`
+  });
+}
+```
+
 ### 5.1 打包项目上下文
 
 ```bash
@@ -766,13 +805,58 @@ async function runBrowserTests() {
 }
 ```
 
-### 7.4 问题修复
+### 7.4 问题修复（智能决策版）
 
 ```javascript
 async function fixIssues(enterpriseIssues, browserIssues) {
   const allIssues = [...enterpriseIssues, ...browserIssues];
 
-  // 零停顿原则：Agent自动修复，不询问用户
+  // 🧠 第一步：调用决策大脑，智能选择修复策略
+  console.log("🧠 调用决策大脑分析修复策略...");
+  const fixDecision = await Skill({
+    name: "th-workflow-decision-engine",
+    args: JSON.stringify({
+      phase: 7,
+      task: "修复测试失败",
+      context: {
+        errors: allIssues,
+        errorTypes: allIssues.map(e => classifyError(e))  // 错误分类
+      }
+    })
+  });
+
+  console.log(`🎯 决策结果: 使用工具 [${fixDecision.tools.join(', ')}]`);
+  console.log(`💡 决策理由: ${fixDecision.reasoning}`);
+
+  // 🔍 第二步：根据决策执行搜索（如果需要）
+  if (fixDecision.tools.includes('unified-search')) {
+    console.log("🔍 执行联网搜索...");
+    await Skill({
+      name: "unified-search",
+      args: `${fixDecision.searchQuery || "修复 " + allIssues[0]} --sources github,docs`
+    });
+  }
+
+  // 🧬 第三步：根据决策执行代码分析（如果需要）
+  if (fixDecision.tools.includes('th-gitnexus-assistant')) {
+    console.log("🧬 执行代码影响分析...");
+    await Skill({
+      name: "th-gitnexus-assistant",
+      prompt: `分析以下错误相关的代码影响范围：${allIssues.join("\n")}`
+    });
+  }
+
+  // 🧠 第四步：根据决策执行多模型聚合（复杂问题）
+  if (fixDecision.tools.includes('th-model-compare-search')) {
+    console.log("🧠 执行多模型聚合分析...");
+    await Skill({
+      name: "th-model-compare-search",
+      args: `如何修复以下测试错误：${allIssues.join("\n")} --models 8`
+    });
+  }
+
+  // 🔧 第五步：Agent自动修复
+  console.log("🔧 执行自动修复...");
   await Agent({
     name: "test-fixer",
     subagent_type: "general-purpose",
@@ -781,6 +865,9 @@ async function fixIssues(enterpriseIssues, browserIssues) {
 
       ${JSON.stringify(allIssues, null, 2)}
 
+      决策大脑建议的修复策略：
+      ${fixDecision.reasoning}
+
       要求：
       1. 优先修复阻塞性问题
       2. 保持代码风格一致
@@ -788,6 +875,18 @@ async function fixIssues(enterpriseIssues, browserIssues) {
       4. 自主决策修复方案，无需用户确认
     `
   });
+}
+
+// 错误分类辅助函数
+function classifyError(error) {
+  const errorMsg = error.toLowerCase();
+  if (errorMsg.includes('timeout') || errorMsg.includes('network')) return 'network';
+  if (errorMsg.includes('undefined') || errorMsg.includes('null')) return 'null_reference';
+  if (errorMsg.includes('syntax')) return 'syntax';
+  if (errorMsg.includes('type')) return 'type_error';
+  if (errorMsg.includes('permission') || errorMsg.includes('eacces')) return 'permission';
+  if (errorMsg.includes('race') || errorMsg.includes('deadlock')) return 'concurrency';
+  return 'unknown';
 }
 ```
 
