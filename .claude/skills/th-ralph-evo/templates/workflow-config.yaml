@@ -1,0 +1,261 @@
+# Ralph Evolution - 工作流配置模板
+# 复制此文件到项目根目录并重命名为 .ralph-evo.yaml
+
+# 项目信息
+project:
+  name: "example-project"          # 项目名称
+  path: "~/src/production/example" # 项目路径
+  description: "示例项目描述"
+
+# 触发器配置
+triggers:
+  # 决策记录触发
+  decision_record:
+    enabled: true
+    path: "~/src/docs/decisions/{project.name}.md"
+    auto_investigate: true           # 决策确认后自动启动深度调研
+    auto_create_prd: true            # 自动从决策创建 PRD
+    confirm_before_implement: true   # 实现前需要用户确认
+
+  # PRD 状态触发
+  prd:
+    enabled: true
+    path: "~/src/docs/prd"
+    auto_start_on_confirmed: true    # PRD 确认后自动开始实现
+    evolution_enabled: true          # 启用 PRD 版本管理
+
+  # 测试失败触发
+  test_failure:
+    enabled: true
+    auto_analyze: true               # 自动分析失败原因
+    auto_fix_low_impact: true        # 低影响 bug 自动修复
+    create_decision_on_high_impact: true  # 高影响 bug 创建决策记录
+
+  # 代码覆盖率触发
+  coverage:
+    enabled: true
+    threshold: 90                    # 覆盖率阈值 (%)
+    warn_on_below: 80                # 低于此值发出警告
+    fail_on_below: 70                # 低于此值阻止合并
+
+# 团队配置
+team:
+  type: "multi-agent"               # 单代理: single, 多代理: multi-agent
+  max_parallel_agents: 5            # 最大并行代理数
+
+  # 代理角色定义
+  workers:
+    - name: "data-agent"
+      layer: "data"
+      model: "typescript-reviewer"   # 根据技术栈调整
+      description: "数据层实现"
+
+    - name: "logic-agent"
+      layer: "logic"
+      model: "typescript-reviewer"
+      description: "逻辑层实现"
+      dependencies: ["data-agent"]   # 依赖其他代理
+
+    - name: "ui-agent"
+      layer: "ui"
+      model: "typescript-reviewer"
+      description: "UI 层实现"
+
+    - name: "test-agent"
+      layer: "test"
+      model: "tdd-guide"
+      description: "测试编写"
+      dependencies: ["data-agent", "logic-agent", "ui-agent"]
+
+  # 审查代理
+  reviewers:
+    - name: "security-reviewer"
+      type: "security-reviewer"
+      enabled: true
+
+    - name: "code-reviewer"
+      type: "code-reviewer"
+      enabled: true
+
+    - name: "performance-reviewer"
+      type: "performance-reviewer"
+      enabled: false
+
+# Worktree 配置
+worktree:
+  base_path: ".claude/worktrees/{project.name}"
+  auto_create: true
+  auto_cleanup: true                # 完成后自动清理
+  max_concurrent: 10                # 最大并行 worktree 数
+
+  # 层定义
+  layers:
+    - name: "data"
+      description: "数据访问层"
+      template: "data-layer"
+
+    - name: "logic"
+      description: "业务逻辑层"
+      template: "logic-layer"
+
+    - name: "ui"
+      description: "UI 展示层"
+      template: "ui-layer"
+
+    - name: "test"
+      description: "测试层"
+      template: "test-layer"
+
+# 质量门禁
+quality_gates:
+  test_coverage:
+    enabled: true
+    threshold: 90
+
+  security_scan:
+    enabled: true
+    tools: ["security-reviewer"]
+
+  code_review:
+    enabled: true
+    required_approvals: 1
+
+  performance_check:
+    enabled: false
+    benchmarks: []
+
+# Bug 分析配置
+bug_analysis:
+  enabled: true
+  tools: ["th-bug-analyzer"]
+
+  # 自动修复策略
+  auto_fix:
+    enabled: true
+    max_risk_level: "MEDIUM"        # 只自动修复 MEDIUM 及以下风险
+
+  # 高影响 bug 处理
+  high_impact:
+    create_decision: true
+    require_user_approval: true
+
+# Dashboard 配置
+dashboard:
+  enabled: true
+  port: 3456
+  refresh_interval: 2000            # 毫秒
+  mode: "cli"                       # cli 或 web
+
+# 深度调研配置
+deep_investigation:
+  enabled: true
+  tools: ["th-deep-coder2"]
+
+  # 自动触发条件
+  auto_trigger:
+    on_new_decision: true
+    on_complex_requirement: true    # 需求复杂度超过阈值
+
+  # 调研范围
+  scope:
+    code_analysis: true
+    best_practices: true
+    similar_implementations: true
+
+# 通知配置
+notifications:
+  enabled: true
+  events:
+    - decision_confirmed
+    - prd_ready
+    - implementation_started
+    - test_failed
+    - bug_fixed
+    - quality_gate_passed
+
+# 日志配置
+logging:
+  level: "INFO"                     # DEBUG, INFO, WARN, ERROR
+  file: "~/.claude/ralph-evo/logs/{project.name}.log"
+  max_files: 10
+  max_size: "10MB"
+
+# 与现有技能集成
+integrations:
+  # decision-record 集成
+  decision_record:
+    enabled: true
+    path: "~/src/docs/decisions"
+
+  # prd-evolution 集成
+  prd_evolution:
+    enabled: true
+    tree_file: "~/src/docs/prd/tree.md"
+    meta_file: "~/src/docs/prd/meta.json"
+
+  # prd-to-code 集成
+  prd_to_code:
+    enabled: true
+    worktree_strategy: "layered"    # 分层 worktree
+
+  # ralpha 集成
+  ralpha:
+    enabled: true
+    config_file: "WORKTREES.md"
+
+  # bug-analyzer 集成
+  bug_analyzer:
+    enabled: true
+    auto_analyze: true
+
+# 工作流阶段定义
+workflow:
+  stages:
+    - name: "decision"
+      description: "决策记录"
+      required: true
+      auto_advance: false           # 需要用户确认
+
+    - name: "investigation"
+      description: "深度调研"
+      required: false
+      auto_advance: true
+
+    - name: "prd"
+      description: "PRD 生成"
+      required: true
+      auto_advance: false
+
+    - name: "implementation"
+      description: "代码实现"
+      required: true
+      auto_advance: true
+
+    - name: "testing"
+      description: "测试验证"
+      required: true
+      auto_advance: true
+
+    - name: "review"
+      description: "代码审查"
+      required: true
+      auto_advance: true
+
+    - name: "bug_analysis"
+      description: "Bug 分析"
+      required: false                 # 按需触发
+      auto_advance: true
+
+    - name: "completion"
+      description: "完成闭环"
+      required: true
+      auto_advance: false
+
+# 自定义钩子 (在特定阶段执行)
+hooks:
+  pre_decision: []
+  post_decision: ["notify:user"]
+  pre_implementation: []
+  post_implementation: ["run:tests"]
+  pre_merge: ["check:coverage"]
+  post_merge: ["cleanup:worktrees"]

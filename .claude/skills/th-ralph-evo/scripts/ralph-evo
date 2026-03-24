@@ -1,0 +1,1112 @@
+#!/usr/bin/env node
+/**
+ * Ralph Evolution - 命令行工具
+ * 纯 CLI 风格，类似 Ralph
+ */
+
+import { readFile, writeFile, mkdir, watch, access } from 'fs/promises';
+import { existsSync } from 'fs';
+import { join, resolve, dirname } from 'path';
+import { homedir } from 'os';
+import { spawn } from 'child_process';
+
+const VERSION = '1.0.0';
+const RALPH_EVO_DIR = join(homedir(), '.ralph-evo');
+const STATE_FILE = join(RALPH_EVO_DIR, 'state.json');
+const MSG_FILE = join(RALPH_EVO_DIR, 'messages.jsonl');
+const PROMPT_QUEUE_FILE = join(RALPH_EVO_DIR, 'prompt-queue.json');
+const SESSION_LOGS_DIR = join(RALPH_EVO_DIR, 'session-logs');
+
+// 颜色
+const c = {
+  reset: '\x1b[0m',
+  red: '\x1b[31m',
+  green: '\x1b[32m',
+  yellow: '\x1b[33m',
+  blue: '\x1b[34m',
+  cyan: '\x1b[36m',
+  dim: '\x1b[2m',
+};
+
+// 图标
+const i = {
+  info: 'ℹ️',
+  success: '✅',
+  error: '❌',
+  warning: '⚠️',
+  running: '🏃',
+  pending: '⏳',
+  active: '🟢',
+  idle: '🟡',
+  done: '🔵',
+};
+
+// 状态管理
+class State {
+  constructor() {
+    this.data = {
+      version: VERSION,
+      active: false,
+      currentProject: null,
+      decisions: [],
+      prds: [],
+      worktrees: [],
+      agents: [],
+      lastUpdate: null,
+    };
+  }
+
+  async load() {
+    try {
+      const data = await readFile(STATE_FILE, 'utf-8');
+      this.data = JSON.parse(data);
+    } catch {}
+  }
+
+  async save() {
+    this.data.lastUpdate = new Date().toISOString();
+    await mkdir(RALPH_EVO_DIR, { recursive: true });
+    await writeFile(STATE_FILE, JSON.stringify(this.data, null, 2));
+  }
+}
+
+// 消息总线
+class MessageBus {
+  static async publish(type, project, payload) {
+    const msg = JSON.stringify({
+      timestamp: new Date().toISOString(),
+      type,
+      project,
+      payload,
+    });
+
+    await mkdir(RALPH_EVO_DIR, { recursive: true });
+    await writeFile(MSG_FILE, msg + '\n', { flag: 'a' });
+  }
+
+  static async *subscribe(project = null) {
+    if (!existsSync(MSG_FILE)) return;
+
+    const data = await readFile(MSG_FILE, 'utf-8');
+    const lines = data.split('\n').filter(Boolean);
+
+    for (const line of lines) {
+      try {
+        const msg = JSON.parse(line);
+        if (!project || msg.project === project) {
+          yield msg;
+        }
+      } catch {}
+    }
+  }
+}
+
+// 提示词队列管理器
+class PromptQueue {
+  constructor() {
+    this.queue = [];
+    this.processed = [];
+    this.sessionContexts = new Map(); // 存储每轮的会话上下文
+  }
+
+  async load() {
+    try {
+      const data = await readFile(PROMPT_QUEUE_FILE, 'utf-8');
+      const parsed = JSON.parse(data);
+      this.queue = parsed.queue || [];
+      this.processed = parsed.processed || [];
+    } catch {
+      this.queue = [];
+      this.processed = [];
+    }
+  }
+
+  async save() {
+    await mkdir(RALPH_EVO_DIR, { recursive: true });
+    await writeFile(PROMPT_QUEUE_FILE, JSON.stringify({
+      queue: this.queue,
+      processed: this.processed,
+      lastUpdate: new Date().toISOString()
+    }, null, 2));
+  }
+
+  // 添加提示词到队列
+  async add(prompt, metadata = {}) {
+    const item = {
+      id: `prompt-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      prompt,
+      metadata: {
+        ...metadata,
+        addedAt: new Date().toISOString(),
+      },
+      status: 'pending'
+    };
+    this.queue.push(item);
+    await this.save();
+    return item;
+  }
+
+  // 获取待处理的提示词（合并为一个）
+  getPendingPrompts() {
+    const pending = this.queue.filter(p => p.status === 'pending');
+    if (pending.length === 0) return null;
+
+    // 合并所有待处理提示词
+    const combined = pending.map(p => p.prompt).join('\n\n---\n\n');
+    return {
+      combined,
+      items: pending,
+      count: pending.length
+    };
+  }
+
+  // 标记为已处理
+  async markProcessed(ids, loopNumber) {
+    for (const id of ids) {
+      const item = this.queue.find(p => p.id === id);
+      if (item) {
+        item.status = 'processed';
+        item.processedAt = new Date().toISOString();
+        item.loopNumber = loopNumber;
+        this.processed.push(item);
+      }
+    }
+    // 从队列中移除已处理的
+    this.queue = this.queue.filter(p => p.status === 'pending');
+    await this.save();
+  }
+
+  // 存储会话上下文
+  async saveSessionContext(loopNumber, context) {
+    await mkdir(SESSION_LOGS_DIR, { recursive: true });
+    const file = join(SESSION_LOGS_DIR, `loop-${loopNumber}-context.json`);
+    await writeFile(file, JSON.stringify(context, null, 2));
+    this.sessionContexts.set(loopNumber, context);
+  }
+
+  // 获取最近的会话上下文
+  getRecentContexts(count = 3) {
+    const contexts = [];
+    for (let i = this.currentLoop; i > Math.max(0, this.currentLoop - count); i--) {
+      if (this.sessionContexts.has(i)) {
+        contexts.push({ loop: i, context: this.sessionContexts.get(i) });
+      }
+    }
+    return contexts;
+  }
+
+  getStats() {
+    return {
+      pending: this.queue.length,
+      processed: this.processed.length,
+      total: this.queue.length + this.processed.length
+    };
+  }
+
+  // 清空队列
+  async clear() {
+    this.processed = [...this.processed, ...this.queue.map(p => ({ ...p, status: 'cleared' }))];
+    this.queue = [];
+    await this.save();
+  }
+}
+
+// 决策监控器
+class DecisionWatcher {
+  constructor(projectPath, state) {
+    this.projectPath = projectPath;
+    this.state = state;
+    this.running = false;
+  }
+
+  async start() {
+    this.running = true;
+    console.log(`${i.active} Starting decision watcher...`);
+    console.log(`${c.dim}Project: ${this.projectPath}${c.reset}\n`);
+
+    // 使用固定默认路径
+    const paths = [
+      join(this.projectPath, 'decisions'),
+      join(homedir(), 'src/docs/decisions'),
+    ];
+
+    // 启动 watcher（关键：必须 await 保持事件循环）
+    const watchPromises = paths
+      .filter(p => existsSync(p))
+      .map(p => this.watchPath(p));
+
+    if (watchPromises.length === 0) {
+      console.log(`${i.warning} No decision directories found`);
+      console.log(`${c.dim}Create: ${paths[0]}${c.reset}`);
+    }
+
+    // 并行运行所有 watcher，保持程序不退出
+    await Promise.all(watchPromises);
+  }
+
+  async watchPath(path) {
+    console.log(`${i.info} Watching: ${path}`);
+
+    try {
+      const watcher = watch(path, { recursive: true });
+
+      for await (const event of watcher) {
+        if (event.filename?.endsWith('.md')) {
+          await this.handleFileChange(join(path, event.filename));
+        }
+      }
+    } catch (err) {
+      console.log(`${i.warning} Watch failed for ${path}: ${err.message}`);
+    }
+  }
+
+  async handleFileChange(filepath) {
+    console.log(`${i.info} File changed: ${filepath}`);
+
+    try {
+      const content = await readFile(filepath, 'utf-8');
+      const decision = this.parseDecision(content, filepath);
+
+      if (decision.status === 'confirmed') {
+        console.log(`${i.success} Decision confirmed: ${decision.id}`);
+        await this.triggerWorkflow(decision);
+      }
+    } catch (err) {
+      console.log(`${i.error} Error parsing ${filepath}: ${err.message}`);
+    }
+  }
+
+  parseDecision(content, filepath) {
+    const lines = content.split('\n');
+    const decision = { id: null, status: 'draft', filepath };
+
+    for (const line of lines) {
+      // 解析主题
+      const themeMatch = line.match(/^## 功能主题[：:]\s*(.+)/);
+      if (themeMatch) {
+        decision.id = themeMatch[1].toLowerCase().replace(/\s+/g, '-');
+      }
+
+      // 解析状态
+      const statusMatch = line.match(/\*\*状态\*\*[：:]\s*`?([^`\n]+)`?/);
+      if (statusMatch) {
+        const statusText = statusMatch[1].trim();
+        if (statusText.includes('确认') || statusText.includes('confirmed')) {
+          decision.status = 'confirmed';
+        }
+      }
+
+      // 解析最终方案
+      if (line.includes('最终确定方案') || line.includes('Final Source of Truth')) {
+        decision.hasFinalDecision = true;
+      }
+    }
+
+    // 如果有最终方案但没有明确状态，也视为已确认
+    if (decision.hasFinalDecision && decision.status === 'draft') {
+      decision.status = 'confirmed';
+    }
+
+    return decision;
+  }
+
+  async triggerWorkflow(decision) {
+    console.log(`${i.running} Triggering workflow for: ${decision.id}`);
+
+    // 发布事件到消息总线
+    await MessageBus.publish('decision_confirmed', this.state.data.currentProject, {
+      decision_id: decision.id,
+      filepath: decision.filepath,
+    });
+
+    // 触发深度调研
+    console.log(`${i.pending} Starting deep investigation...`);
+    // 这里可以调用 th-deep-coder2
+
+    // 触发 PRD 创建
+    console.log(`${i.pending} Creating PRD...`);
+    // 这里可以调用 prd-evolution
+
+    // 更新状态
+    this.state.data.decisions.push({
+      id: decision.id,
+      status: 'confirmed',
+      timestamp: new Date().toISOString(),
+    });
+    await this.state.save();
+  }
+
+  async scanAll(paths) {
+    console.log(`${i.info} Scanning decision files...`);
+    const { readdir } = await import('fs/promises');
+
+    for (const path of paths) {
+      if (!existsSync(path)) continue;
+
+      try {
+        const files = await readdir(path);
+        const mdFiles = files.filter(f => f.endsWith('.md'));
+
+        for (const file of mdFiles) {
+          await this.handleFileChange(join(path, file));
+        }
+      } catch (err) {
+        console.log(`${i.warning} Scan error for ${path}: ${err.message}`);
+      }
+    }
+  }
+
+  stop() {
+    this.running = false;
+    console.log(`${i.info} Decision watcher stopped`);
+  }
+}
+
+// 扫描可用 ID
+async function scanAvailableIds(projectPath) {
+  const { readdir, readFile } = await import('fs/promises');
+  const ids = {
+    decisions: [],
+    prds: [],
+    bugs: [],
+  };
+
+  // 扫描决策文件
+  const decisionPaths = [
+    join(projectPath, 'decisions'),
+    join(homedir(), 'src/docs/decisions'),
+  ];
+
+  for (const dp of decisionPaths) {
+    if (existsSync(dp)) {
+      try {
+        const files = await readdir(dp);
+        for (const f of files.filter(f => f.endsWith('.md') && f !== 'INDEX.md')) {
+          const content = await readFile(join(dp, f), 'utf-8');
+          // 解析 ID 和状态
+          const themeMatch = content.match(/^## 功能主题[：:]\s*(.+)/m);
+          const statusMatch = content.match(/\*\*状态\*\*[：:]\s*`?([^`\n]+)`?/);
+
+          if (themeMatch) {
+            const id = themeMatch[1].toLowerCase().replace(/\s+/g, '-');
+            let status = 'draft';
+            if (statusMatch) {
+              const s = statusMatch[1].trim();
+              if (s.includes('确认') || s.includes('confirmed')) status = 'confirmed';
+              else if (s.includes('实现') || s.includes('implemented')) status = 'implemented';
+              else if (s.includes('废弃') || s.includes('abandoned')) status = 'abandoned';
+            }
+            ids.decisions.push({ id, status, file: f });
+          }
+        }
+      } catch {}
+    }
+  }
+
+  // 扫描 PRD 文件
+  const prdPath = join(projectPath, 'docs/prd');
+  if (existsSync(prdPath)) {
+    try {
+      const files = await readdir(prdPath);
+      for (const f of files.filter(f => f.endsWith('.md'))) {
+        const id = f.replace('.md', '');
+        ids.prds.push({ id, file: f, status: 'available' });
+      }
+    } catch {}
+  }
+
+  // 从消息总线读取 Bug ID
+  try {
+    if (existsSync(MSG_FILE)) {
+      const data = await readFile(MSG_FILE, 'utf-8');
+      const lines = data.split('\n').filter(Boolean);
+      for (const line of lines.slice(-20)) {
+        try {
+          const msg = JSON.parse(line);
+          if (msg.type === 'test_failed' || msg.type === 'bug_created') {
+            const bugId = msg.payload?.bug_id || msg.payload?.test_file?.replace(/\./g, '-');
+            if (bugId && !ids.bugs.find(b => b.id === bugId)) {
+              ids.bugs.push({ id: bugId, status: 'open', file: msg.payload?.test_file });
+            }
+          }
+        } catch {}
+      }
+    }
+  } catch {}
+
+  return ids;
+}
+
+// 状态面板
+async function renderStatus(state) {
+  console.clear();
+  console.log(`${c.cyan}🚀 Ralph Evolution v${VERSION}${c.reset}`);
+  console.log(`${c.dim}Project: ${state.data.currentProject || 'none'}${c.reset}`);
+  console.log(`Status: ${state.data.active ? i.active : i.idle} ${state.data.active ? 'Running' : 'Idle'}\n`);
+
+  // 扫描可用 ID
+  const availableIds = await scanAvailableIds(state.data.currentProject || process.cwd());
+
+  // Decisions 面板（带 ID 列表）
+  console.log(`${c.cyan}┌─ Decisions ──────────────────────────────┐${c.reset}`);
+  if (availableIds.decisions.length === 0) {
+    console.log(`│ ${c.dim}No decisions found${c.reset}                        │`);
+  } else {
+    for (const d of availableIds.decisions.slice(0, 6)) {
+      const statusIcon = d.status === 'confirmed' ? i.active : d.status === 'implemented' ? i.done : i.pending;
+      const line = `${statusIcon} ${d.id.slice(0, 35).padEnd(35)}`;
+      console.log(`│ ${line}│`);
+    }
+    if (availableIds.decisions.length > 6) {
+      console.log(`│ ${c.dim}... and ${availableIds.decisions.length - 6} more${c.reset}                     │`);
+    }
+  }
+  console.log(`└──────────────────────────────────────────┘`);
+  console.log(`${c.dim}Use: ralph-evo run --decision <id>${c.reset}\n`);
+
+  // PRDs 面板（带 ID 列表）
+  console.log(`${c.cyan}┌─ PRDs ───────────────────────────────────┐${c.reset}`);
+  if (availableIds.prds.length === 0) {
+    console.log(`│ ${c.dim}No PRDs found${c.reset}                             │`);
+  } else {
+    for (const p of availableIds.prds.slice(0, 6)) {
+      const line = `${i.done} ${p.id.slice(0, 35).padEnd(35)}`;
+      console.log(`│ ${line}│`);
+    }
+    if (availableIds.prds.length > 6) {
+      console.log(`│ ${c.dim}... and ${availableIds.prds.length - 6} more${c.reset}                     │`);
+    }
+  }
+  console.log(`└──────────────────────────────────────────┘`);
+  console.log(`${c.dim}Use: ralph-evo run --prd <id>${c.reset}\n`);
+
+  // Worktrees & Agents
+  console.log(`${c.cyan}┌─ Worktrees ───────────────┐${c.reset}  ${c.cyan}┌─ Agents ──────────────────┐${c.reset}`);
+  const worktrees = state.data.worktrees.slice(0, 3);
+  const agents = state.data.agents.slice(0, 3);
+
+  for (let idx = 0; idx < Math.max(worktrees.length, agents.length); idx++) {
+    const w = worktrees[idx];
+    const a = agents[idx];
+    const wLine = w ? `${w.status === 'running' ? i.running : i.success} ${w.name.slice(0, 23).padEnd(23)}` : ''.padEnd(27);
+    const aLine = a ? `${a.status === 'active' ? i.active : i.idle} ${a.name.slice(0, 23).padEnd(23)}` : ''.padEnd(27);
+    console.log(`│ ${wLine}│  │ ${aLine}│`);
+  }
+  console.log(`└───────────────────────────┘  └───────────────────────────┘\n`);
+
+  // Bugs 面板
+  if (availableIds.bugs.length > 0) {
+    console.log(`${c.cyan}┌─ Bugs ───────────────────────────────────┐${c.reset}`);
+    for (const b of availableIds.bugs.slice(0, 4)) {
+      const line = `${i.warning} ${b.id.slice(0, 35).padEnd(35)}`;
+      console.log(`│ ${line}│`);
+    }
+    console.log(`└──────────────────────────────────────────┘`);
+    console.log(`${c.dim}Use: ralph-evo analyze --bug <id>${c.reset}\n`);
+  }
+
+  // Recent messages
+  console.log(`${c.cyan}Recent Messages:${c.reset}`);
+  const messages = [];
+  for await (const msg of MessageBus.subscribe(state.data.currentProject)) {
+    messages.push(msg);
+  }
+  messages.slice(-5).forEach(msg => {
+    const time = msg.timestamp.split('T')[1].slice(0, 8);
+    const id = msg.payload?.decision_id || msg.payload?.prd_id || msg.payload?.bug_id || '';
+    console.log(`${c.dim}${time}${c.reset} [${msg.type}] ${id}`);
+  });
+
+  console.log(`\n${c.dim}Press Ctrl+C to exit${c.reset}`);
+}
+
+// 初始化配置
+async function init(projectPath) {
+  const configContent = `# Ralph Evolution Configuration
+project:
+  name: ${projectPath ? basename(projectPath) : 'my-project'}
+  path: ${projectPath || '.'}
+
+decisions:
+  sources:
+    - ./decisions
+    - ~/src/docs/decisions
+
+messaging:
+  bus_file: ~/.ralph-evo/messages.jsonl
+
+triggers:
+  decision_confirmed:
+    auto_investigate: true
+    auto_create_prd: true
+
+  test_failure:
+    auto_analyze: true
+
+skills:
+  decision_record: true
+  prd_evolution: true
+  prd_to_code: true
+  ralpha: true
+  bug_analyzer: true
+  deep_coder2: true
+`;
+
+  const targetPath = projectPath || process.cwd();
+  const configPath = join(targetPath, CONFIG_FILE);
+
+  await writeFile(configPath, configContent);
+  console.log(`${i.success} Created: ${configPath}`);
+  console.log(`${i.info} Edit this file to configure Ralph Evolution`);
+}
+
+// 阶段定义 (th-prd-driven-dev-workflow 的 7 个阶段)
+const PHASES = [
+  { id: 1, name: '项目分析', description: '读取PRD、编写用户故事、收集上下文', skill: 'th-prd-driven-dev-workflow', mode: '1' },
+  { id: 2, name: '多模型需求分析', description: '8模型并行需求分析', skill: 'th-prd-driven-dev-workflow', mode: '2' },
+  { id: 3, name: 'Kimi深度整合', description: '整合多模型分析结果', skill: 'th-prd-driven-dev-workflow', mode: '3' },
+  { id: 4, name: 'PRD更新', description: '基于分析结果更新PRD文档', skill: 'th-prd-driven-dev-workflow', mode: '4' },
+  { id: 5, name: '代码审查准备', description: '打包上下文、多模型代码审查', skill: 'th-prd-driven-dev-workflow', mode: '5' },
+  { id: 6, name: '代码开发', description: '基于审查建议生成代码', skill: 'th-prd-driven-dev-workflow', mode: '6' },
+  { id: 7, name: '自动化测试', description: 'E2E测试、性能测试、Bug修复闭环', skill: 'th-prd-driven-dev-workflow', mode: '7' },
+];
+
+// 阶段报告类
+class PhaseReporter {
+  constructor(state) {
+    this.state = state;
+    this.currentPhase = 0;
+    this.phaseStatus = PHASES.map(p => ({ ...p, status: 'pending', startTime: null, endTime: null, logs: [] }));
+  }
+
+  // 渲染进度面板
+  render() {
+    console.clear();
+    console.log(`${c.cyan}┌─ Ralph Evo Drive Mode ─────────────────────────────────┐${c.reset}`);
+    console.log(`${c.cyan}│${c.reset} Project: ${this.state.data.currentProject || 'none'}${' '.repeat(56 - (this.state.data.currentProject?.length || 4))}${c.cyan}│${c.reset}`);
+    console.log(`${c.cyan}│${c.reset} Workflow: th-prd-driven-dev-workflow (7 phases)${' '.repeat(25)}${c.cyan}│${c.reset}`);
+    console.log(`${c.cyan}│${c.reset} Loop: ${this.state.data.loopCount || 1}/${this.state.data.maxLoops || '∞'}${' '.repeat(50)}${c.cyan}│${c.reset}`);
+    console.log(`${c.cyan}├─ Phase Progress ───────────────────────────────────────┤${c.reset}`);
+
+    for (const phase of this.phaseStatus) {
+      const icon = this.getPhaseIcon(phase.status);
+      const progress = phase.status === 'running' ? this.getProgressBar() : '';
+      const line = `${icon} [P${phase.id}] ${phase.name.padEnd(16)} ${phase.status.padEnd(12)} ${progress}`;
+      console.log(`${c.cyan}│${c.reset} ${line.slice(0, 54).padEnd(54)}${c.cyan}│${c.reset}`);
+
+      if (phase.status === 'running' && phase.description) {
+        const desc = `${c.dim}${phase.description.slice(0, 52)}${c.reset}`;
+        console.log(`${c.cyan}│${c.reset}    ${desc.slice(0, 50).padEnd(50)}${c.cyan}│${c.reset}`);
+      }
+    }
+
+    console.log(`${c.cyan}├─ Recent Logs ──────────────────────────────────────────┤${c.reset}`);
+    const recentLogs = this.phaseStatus.flatMap(p => p.logs).slice(-5);
+    if (recentLogs.length === 0) {
+      console.log(`${c.cyan}│${c.reset} ${c.dim}Waiting to start...${' '.repeat(36)}${c.cyan}│${c.reset}`);
+    } else {
+      for (const log of recentLogs) {
+        const time = new Date(log.time).toLocaleTimeString('zh-CN', { hour12: false });
+        const line = `${c.dim}${time}${c.reset} ${log.message.slice(0, 40)}`;
+        console.log(`${c.cyan}│${c.reset} ${line.slice(0, 54).padEnd(54)}${c.cyan}│${c.reset}`);
+      }
+    }
+
+    console.log(`${c.cyan}├─ Git Commits ──────────────────────────────────────────┤${c.reset}`);
+    const commits = this.state.data.recentCommits || [];
+    if (commits.length === 0) {
+      console.log(`${c.cyan}│${c.reset} ${c.dim}No commits yet${' '.repeat(39)}${c.cyan}│${c.reset}`);
+    } else {
+      for (const commit of commits.slice(-3)) {
+        const line = `${i.success} ${commit.slice(0, 50)}`;
+        console.log(`${c.cyan}│${c.reset} ${line.slice(0, 54).padEnd(54)}${c.cyan}│${c.reset}`);
+      }
+    }
+
+    console.log(`${c.cyan}└────────────────────────────────────────────────────────┘${c.reset}`);
+    console.log(`${c.dim}Press Ctrl+C to exit | ralph-evo status for full dashboard${c.reset}`);
+  }
+
+  getPhaseIcon(status) {
+    switch (status) {
+      case 'completed': return i.success;
+      case 'running': return i.running;
+      case 'error': return i.error;
+      default: return i.pending;
+    }
+  }
+
+  getProgressBar() {
+    const width = 10;
+    const elapsed = Date.now() - (this.phaseStatus[this.currentPhase]?.startTime || Date.now());
+    const estimated = 60000; // 预估60秒
+    const pct = Math.min(100, Math.floor((elapsed / estimated) * 100));
+    const filled = Math.floor((pct / 100) * width);
+    const bar = '█'.repeat(filled) + '░'.repeat(width - filled);
+    return `${bar} ${pct}%`;
+  }
+
+  startPhase(phaseId) {
+    this.currentPhase = phaseId - 1;
+    const phase = this.phaseStatus[this.currentPhase];
+    phase.status = 'running';
+    phase.startTime = Date.now();
+    this.log(phaseId, `Started: ${phase.name}`);
+    this.render();
+  }
+
+  completePhase(phaseId, result = 'success') {
+    const phase = this.phaseStatus[phaseId - 1];
+    phase.status = result === 'success' ? 'completed' : 'error';
+    phase.endTime = Date.now();
+    const duration = ((phase.endTime - phase.startTime) / 1000).toFixed(1);
+    this.log(phaseId, `Completed in ${duration}s`);
+    this.render();
+  }
+
+  log(phaseId, message) {
+    const phase = this.phaseStatus[phaseId - 1];
+    phase.logs.push({ time: Date.now(), message });
+    this.state.data.lastLog = { phase: phaseId, message, time: new Date().toISOString() };
+  }
+
+  reset() {
+    this.currentPhase = 0;
+    this.phaseStatus = PHASES.map(p => ({ ...p, status: 'pending', startTime: null, endTime: null, logs: [] }));
+  }
+}
+
+// 工作流驱动器 - 循环运行7个阶段
+class WorkflowDriver {
+  constructor(projectPath, state) {
+    this.projectPath = projectPath;
+    this.state = state;
+    this.reporter = new PhaseReporter(state);
+    this.running = false;
+    this.currentLoop = 1;
+    this.maxLoops = Infinity;
+  }
+
+  async start(options = {}) {
+    this.running = true;
+    this.maxLoops = options.maxLoops || Infinity;
+    this.state.data.active = true;
+    this.state.data.currentProject = this.projectPath;
+    this.state.data.maxLoops = this.maxLoops;
+    await this.state.save();
+
+    console.log(`${i.active} Starting Drive Mode...`);
+    console.log(`${c.dim}Project: ${this.projectPath}${c.reset}`);
+    console.log(`${c.dim}Workflow: th-prd-driven-dev-workflow (7 phases)${c.reset}\n`);
+
+    // 初始渲染
+    this.reporter.render();
+
+    // 启动状态刷新定时器
+    const refreshInterval = setInterval(() => {
+      if (this.running) this.reporter.render();
+    }, 2000);
+
+    try {
+      while (this.running) {
+        console.log(`\n${c.cyan}=== Loop ${this.currentLoop}${this.maxLoops !== Infinity ? `/${this.maxLoops}` : ''} ===${c.reset}\n`);
+        this.state.data.loopCount = this.currentLoop;
+        await this.state.save();
+
+        // 依次执行7个阶段
+        for (const phase of PHASES) {
+          if (!this.running) break;
+          await this.executePhase(phase, options);
+        }
+
+        if (!this.running) break;
+
+        // 一轮完成
+        console.log(`\n${i.success} Loop ${this.currentLoop} completed!`);
+        this.reporter.reset();
+
+        // 检查是否继续
+        this.currentLoop++;
+        if (this.currentLoop > this.maxLoops) {
+          console.log(`${i.info} Max loops reached, stopping...`);
+          break;
+        }
+
+        // 短暂暂停后继续下一轮
+        console.log(`${c.dim}Pausing 5s before next loop...${c.reset}`);
+        await this.sleep(5000);
+      }
+    } finally {
+      clearInterval(refreshInterval);
+      this.running = false;
+      this.state.data.active = false;
+      await this.state.save();
+    }
+  }
+
+  async executePhase(phase, options = {}) {
+    this.reporter.startPhase(phase.id);
+
+    try {
+      // 调用 Claude CLI 执行 skill
+      const result = await this.callClaudeSkill(phase, options);
+
+      if (result.success) {
+        this.reporter.completePhase(phase.id, 'success');
+
+        // 更新状态
+        this.state.data.currentPhase = phase.id;
+        this.state.data.recentCommits = this.state.data.recentCommits || [];
+        this.state.data.recentCommits.push(`阶段${phase.id}: ${phase.name}`);
+        if (this.state.data.recentCommits.length > 10) {
+          this.state.data.recentCommits.shift();
+        }
+        await this.state.save();
+      } else {
+        this.reporter.completePhase(phase.id, 'error');
+        this.reporter.log(phase.id, `Error: ${result.error}`);
+
+        // 根据配置决定是否继续
+        if (!options.continueOnError) {
+          console.log(`${i.error} Phase ${phase.id} failed, stopping...`);
+          this.running = false;
+        }
+      }
+    } catch (err) {
+      this.reporter.completePhase(phase.id, 'error');
+      this.reporter.log(phase.id, `Exception: ${err.message}`);
+      console.error(`${i.error} Phase ${phase.id} exception:`, err.message);
+    }
+
+    // 阶段间短暂暂停
+    await this.sleep(1000);
+  }
+
+  async callClaudeSkill(phase, options = {}) {
+    const { spawn } = await import('child_process');
+    const { exec } = await import('child_process');
+    const { promisify } = await import('util');
+    const execAsync = promisify(exec);
+
+    // 尝试找到 Claude CLI 的路径
+    const claudePath = await this.findClaudePath(execAsync);
+    if (!claudePath) {
+      return { success: false, error: 'Claude CLI not found. Please install Claude Code or set CLAUDE_PATH environment variable.' };
+    }
+
+    return new Promise((resolve) => {
+      const startTime = Date.now();
+      let stdout = '';
+      let stderr = '';
+
+      // 构建调用参数
+      const args = this.buildClaudeArgs(claudePath, phase);
+
+      this.reporter.log(phase.id, `Executing: ${claudePath.split('/').pop()} ${args.join(' ').slice(0, 60)}...`);
+
+      const child = spawn(claudePath, args, {
+        cwd: this.projectPath,
+        env: { ...process.env, RALPH_EVO_PHASE: phase.id },
+        stdio: ['ignore', 'pipe', 'pipe'],
+      });
+
+      child.stdout.on('data', (data) => {
+        stdout += data.toString();
+        const lines = data.toString().trim().split('\n');
+        const lastLine = lines[lines.length - 1];
+        if (lastLine && lastLine.length > 10) {
+          this.reporter.phaseStatus[phase.id - 1].description = lastLine.slice(0, 60);
+        }
+
+        // 检测阶段完成信号
+        this.detectPhaseSignals(phase.id, data.toString());
+      });
+
+      child.stderr.on('data', (data) => {
+        stderr += data.toString();
+        this.reporter.log(phase.id, `stderr: ${data.toString().slice(0, 50)}`);
+      });
+
+      child.on('error', (err) => {
+        this.reporter.log(phase.id, `Spawn error: ${err.message}`);
+        resolve({ success: false, error: err.message, stdout, stderr });
+      });
+
+      child.on('close', (code) => {
+        const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+        this.reporter.log(phase.id, `Finished in ${duration}s (code: ${code})`);
+
+        resolve({
+          success: code === 0,
+          stdout,
+          stderr,
+          duration,
+        });
+      });
+
+      // 注意：无超时限制 - 阶段可以无限运行直到完成
+    });
+  }
+
+  async findClaudePath(execAsync) {
+    // 1. 首先检查环境变量
+    if (process.env.CLAUDE_PATH) {
+      return process.env.CLAUDE_PATH;
+    }
+
+    // 2. 尝试常见的 Claude 安装路径
+    const possiblePaths = [
+      '/usr/local/bin/claude',
+      '/usr/bin/claude',
+      `${homedir()}/.local/bin/claude`,
+      `${homedir()}/.npm-global/bin/claude`,
+      `${homedir()}/.local/share/pnpm/claude`,
+      `${homedir()}/.config/yarn/global/node_modules/.bin/claude`,
+    ];
+
+    for (const path of possiblePaths) {
+      try {
+        await access(path);
+        return path;
+      } catch {}
+    }
+
+    // 3. 尝试使用 which 命令查找
+    try {
+      const { stdout } = await execAsync('which claude');
+      const path = stdout.trim();
+      if (path) return path;
+    } catch {}
+
+    // 4. 尝试使用 npx 调用
+    try {
+      await execAsync('which npx');
+      return 'npx';
+    } catch {}
+
+    return null;
+  }
+
+  buildClaudeArgs(claudePath, phase) {
+    // 使用 / 命令格式触发 skill
+    const prompt = `/${phase.skill} --phase ${phase.mode} --project ${this.projectPath}`;
+
+    // 标准 Claude CLI 调用 - 使用 -p 非交互模式
+    // 注意: -p 后面必须直接跟提示词
+    return [
+      '-p', prompt,
+      '--permission-mode', 'acceptEdits',
+      '--allowed-tools', 'Skill,Bash,Read,Write,Edit,Glob,Grep,Agent',
+    ];
+  }
+
+  sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  // 检测阶段信号
+  detectPhaseSignals(currentPhaseId, output) {
+    // 支持多种信号格式
+    const signals = [
+      // 格式1: [PHASE_COMPLETE] P1
+      { pattern: /\[PHASE_COMPLETE\]\s*P(\d+)/i, type: 'complete' },
+      // 格式2: === Phase 1 Completed ===
+      { pattern: /[=\-]{2,}\s*Phase\s*(\d+)\s*(?:Completed|Done|Finished)[=\-]*/i, type: 'complete' },
+      // 格式3: 🏁 Phase 1: 完成
+      { pattern: /(?:🏁|✅|✓|完成|Complete).*?Phase\s*(\d+)|阶段\s*(\d+).*?(?:完成|done)/i, type: 'complete' },
+      // 格式4: [P1] ✅ 完成
+      { pattern: /\[P(\d+)\].*?(?:✅|✓|完成|done|completed)/i, type: 'complete' },
+      // 格式5: 阶段1 完成 / Phase 1 done
+      { pattern: /(?:阶段|Phase)\s*(\d+)\s*(?:完成|done|completed|finished)/i, type: 'complete' },
+      // 格式6: [RALPH_EVO] PHASE=1 STATUS=COMPLETE
+      { pattern: /\[RALPH_EVO\].*?PHASE=(\d+).*?STATUS=(?:COMPLETE|DONE|OK)/i, type: 'complete' },
+    ];
+
+    for (const signal of signals) {
+      const matches = output.matchAll(new RegExp(signal.pattern, 'gi'));
+      for (const match of matches) {
+        const phaseNum = parseInt(match[1] || match[2]);
+        if (phaseNum && phaseNum >= 1 && phaseNum <= 7) {
+          this.handleSignal(phaseNum, signal.type, match[0]);
+        }
+      }
+    }
+  }
+
+  // 处理检测到的信号
+  handleSignal(phaseNum, type, rawSignal) {
+    const phaseIdx = phaseNum - 1;
+
+    if (type === 'complete') {
+      // 标记该阶段为完成
+      if (this.reporter.phaseStatus[phaseIdx].status !== 'completed') {
+        this.reporter.phaseStatus[phaseIdx].status = 'completed';
+        this.reporter.log(phaseNum, `Signal: ${rawSignal.slice(0, 40)}`);
+
+        // 如果有下一个阶段，自动更新为 running
+        if (phaseNum < 7 && this.reporter.phaseStatus[phaseNum].status === 'pending') {
+          this.reporter.phaseStatus[phaseNum].status = 'running';
+          this.reporter.log(phaseNum + 1, 'Auto-started (detected P' + phaseNum + ' complete)');
+        }
+
+        this.reporter.render();
+      }
+    }
+  }
+
+  stop() {
+    this.running = false;
+    console.log(`\n${i.info} Stopping drive mode...`);
+  }
+}
+
+// 主函数
+async function main() {
+  const args = process.argv.slice(2);
+  const command = args[0];
+  const state = new State();
+  await state.load();
+
+  switch (command) {
+    case 'init':
+      const projectPath = args.find((a, i) => args[i - 1] === '--project');
+      await init(projectPath);
+      break;
+
+    case 'watch':
+      const watchProject = args.find((a, i) => args[i - 1] === '--project') || process.cwd();
+      state.data.currentProject = watchProject;
+      state.data.active = true;
+      await state.save();
+
+      const watcher = new DecisionWatcher(watchProject, state);
+      await watcher.start();
+
+      // 保持运行
+      process.on('SIGINT', () => {
+        watcher.stop();
+        process.exit(0);
+      });
+      break;
+
+    case 'drive':
+      const driveProject = args.find((a, i) => args[i - 1] === '--project') || process.cwd();
+      const maxLoops = parseInt(args.find((a, i) => args[i - 1] === '--max-loops')) || Infinity;
+      const continueOnError = args.includes('--continue-on-error');
+
+      const driver = new WorkflowDriver(driveProject, state);
+
+      // 处理中断信号
+      process.on('SIGINT', () => {
+        driver.stop();
+        setTimeout(() => process.exit(0), 1000);
+      });
+
+      await driver.start({ maxLoops, continueOnError });
+      break;
+
+    case 'status':
+      await renderStatus(state);
+      const interval = setInterval(async () => await renderStatus(state), 3000);
+
+      process.on('SIGINT', () => {
+        clearInterval(interval);
+        console.log('\n');
+        process.exit(0);
+      });
+      break;
+
+    case 'run':
+      const decisionId = args.find((a, i) => args[i - 1] === '--decision');
+      const prdId = args.find((a, i) => args[i - 1] === '--prd');
+
+      if (decisionId) {
+        console.log(`${i.running} Running workflow for decision: ${decisionId}`);
+        await MessageBus.publish('decision_triggered', state.data.currentProject, {
+          decision_id: decisionId,
+        });
+      } else if (prdId) {
+        console.log(`${i.running} Running workflow for PRD: ${prdId}`);
+        await MessageBus.publish('prd_triggered', state.data.currentProject, {
+          prd_id: prdId,
+        });
+      } else {
+        console.log(`${i.error} Please specify --decision or --prd`);
+      }
+      break;
+
+    case 'sync':
+      console.log(`${i.running} Syncing decisions to PRDs...`);
+      // 扫描决策文件并同步到 PRD
+      break;
+
+    case 'analyze':
+      const testFile = args.find((a, i) => args[i - 1] === '--test');
+      const error = args.find((a, i) => args[i - 1] === '--error');
+      const bugId = args.find((a, i) => args[i - 1] === '--bug');
+
+      if (testFile) {
+        console.log(`${i.running} Analyzing test failure: ${testFile}`);
+        await MessageBus.publish('test_failed', state.data.currentProject, {
+          test_file: testFile,
+          error: error || 'Unknown error',
+        });
+      } else if (bugId) {
+        console.log(`${i.running} Analyzing bug: ${bugId}`);
+        // 调用 th-bug-analyzer
+      } else {
+        console.log(`${i.error} Please specify --test or --bug`);
+      }
+      break;
+
+    case 'version':
+    case '--version':
+    case '-v':
+      console.log(`Ralph Evolution v${VERSION}`);
+      break;
+
+    case 'help':
+    case '--help':
+    case '-h':
+    default:
+      console.log(`
+${c.cyan}Ralph Evolution v${VERSION}${c.reset} - 自动化闭环开发系统
+
+Usage: ralph-evo <command> [options]
+
+Commands:
+  init [--project <path>]         初始化项目配置
+  watch [--project <path>]        启动决策文件监控
+  drive [--project <path>]        启动工作流驱动模式（循环运行7阶段）
+        [--max-loops <n>]         最大循环次数（默认无限）
+        [--continue-on-error]     错误时继续执行
+  status                          显示实时状态面板
+  run --decision <id>             手动触发决策工作流
+  run --prd <id>                  手动触发 PRD 实现
+  sync                            同步决策到 PRD
+  analyze --test <file>           分析测试失败
+  analyze --bug <id>              分析 Bug
+  version                         显示版本
+
+Examples:
+  ralph-evo init
+  ralph-evo watch --project ~/src/production/user-auth
+  ralph-evo drive --project ~/src/production/user-auth
+  ralph-evo drive --max-loops 5 --continue-on-error
+  ralph-evo status
+  ralph-evo run --decision auth-optimization
+  ralph-evo analyze --test auth.test.ts --error "timeout"
+
+For more info: ~/.claude/skills/th-ralph-evo/SKILL.md
+`);
+  }
+}
+
+function basename(path) {
+  return path.split('/').pop();
+}
+
+main().catch(err => {
+  console.error(`${i.error} Error:`, err.message);
+  process.exit(1);
+});

@@ -1,0 +1,85 @@
+#!/usr/bin/env node
+/**
+ * Ralph Evolution - th-bug-analyzer 集成
+ * 当测试失败时调用 bug-analyzer 进行分析
+ */
+
+import { readFile, writeFile, mkdir } from 'fs/promises';
+import { join } from 'path';
+import { homedir } from 'os';
+
+const RALPH_EVO_DIR = join(homedir(), '.ralph-evo');
+const MSG_FILE = join(RALPH_EVO_DIR, 'messages.jsonl');
+
+async function publishMessage(type, project, payload) {
+  const msg = JSON.stringify({
+    timestamp: new Date().toISOString(),
+    type,
+    project,
+    payload,
+  });
+
+  await mkdir(RALPH_EVO_DIR, { recursive: true });
+  await writeFile(MSG_FILE, msg + '\n', { flag: 'a' });
+}
+
+async function main() {
+  const args = process.argv.slice(2);
+  const testFile = args.find((a, i) => args[i - 1] === '--test') || args[0];
+  const error = args.find((a, i) => args[i - 1] === '--error') || args[1] || 'Test failed';
+  const project = args.find((a, i) => args[i - 1] === '--project') || 'unknown';
+
+  if (!testFile) {
+    console.error('Usage: ralph-evo-bug-analyzer --test <file> [--error <msg>] [--project <name>]');
+    process.exit(1);
+  }
+
+  console.log('🔍 Analyzing test failure...');
+  console.log(`   Test: ${testFile}`);
+  console.log(`   Error: ${error}`);
+
+  // 调用 th-bug-analyzer 的分析逻辑
+  // 这里可以调用 GitNexus 进行影响分析
+
+  // 分析结果
+  const analysis = {
+    test_file: testFile,
+    error_message: error,
+    risk_level: 'MEDIUM', // LOW, MEDIUM, HIGH, CRITICAL
+    affected_files: [],
+    recommendation: 'auto_fix', // auto_fix, decision_required, manual
+  };
+
+  // 根据错误类型判断风险等级
+  if (error.includes('timeout') || error.includes('async')) {
+    analysis.risk_level = 'LOW';
+    analysis.recommendation = 'auto_fix';
+  } else if (error.includes('undefined') || error.includes('null')) {
+    analysis.risk_level = 'LOW';
+    analysis.recommendation = 'auto_fix';
+  } else if (error.includes('security') || error.includes('auth')) {
+    analysis.risk_level = 'HIGH';
+    analysis.recommendation = 'decision_required';
+  }
+
+  console.log(`   Risk Level: ${analysis.risk_level}`);
+  console.log(`   Recommendation: ${analysis.recommendation}`);
+
+  // 发布消息到总线
+  await publishMessage('test_analyzed', project, {
+    test_file: testFile,
+    analysis,
+  });
+
+  // 如果需要创建决策
+  if (analysis.recommendation === 'decision_required') {
+    console.log('📝 Creating decision record for high-risk bug...');
+    // 创建决策文件
+    const decisionId = `bug-${Date.now()}`;
+    console.log(`   Decision ID: ${decisionId}`);
+  }
+
+  console.log('✅ Analysis complete');
+}
+
+main().catch(console.error);

@@ -1,0 +1,24 @@
+{
+  "name": "throokie-ralph",
+  "description": "文档驱动的 worktree 管理工具 (优先使用中国超算 SCNet 模型)",
+  "trigger_words": [
+    "worktree 创建",
+    "切换分支",
+    "并行开发",
+    "并发执行",
+    "合并 worktree",
+    "throokie-ralph"
+  ],
+  "script_path": "~/src/projects/tools/throokie-ralph/bin/throokie-ralph",
+  "usage": "throokie-ralph <command> [args]",
+  "model_priority": {
+    "primary": "scnet",
+    "fallback_chain": ["scnet", "aliyun", "ctyun", "nvidia", "siliconflow"],
+    "recommended_models": {
+      "reasoning": "deepseek-r1-0528-scnet",
+      "coding": "qwen3-coder-480b-a35b-scnet",
+      "general": "qwen3-235b-a22b-scnet",
+      "lightweight": "qwen3-30b-a3b-scnet"
+    }
+  }
+}
