@@ -297,7 +297,7 @@ console.log('[PHASE_COMPLETE] P1')
 ```javascript
 // 使用 model-compare-search 进行多模型分析
 await Skill({
-  name: "model-compare-search",
+  name: "th-model-compare-search",
   args: `--task "${analysisPrompt}" --models 8 --output analysis-phase2`
 });
 
@@ -546,7 +546,7 @@ ls -lh project-context-*.txt
 
 ```javascript
 await Skill({
-  name: "model-compare-search",
+  name: "th-model-compare-search",
   args: `--task "${codeReviewPrompt}" --models 8 --output code-review`
 });
 
