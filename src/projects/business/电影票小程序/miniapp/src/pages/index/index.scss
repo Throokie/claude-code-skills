@@ -1,76 +1,341 @@
 .index-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(180deg, #667eea 0%, #764ba2 50%, #f5f7fa 50%);
   padding: 20px;
+  padding-bottom: 40px;
 }
 
+// 头部区域
 .header {
-  padding: 20px 0;
+  padding: 30px 0 40px;
   text-align: center;
 
   .title {
-    font-size: 24px;
+    font-size: 28px;
     font-weight: bold;
     color: #fff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    &::before {
+      content: '🎬';
+      font-size: 32px;
+    }
   }
 
   .date {
     display: block;
     font-size: 14px;
-    color: rgba(255, 255, 255, 0.8);
-    margin-top: 8px;
+    color: rgba(255, 255, 255, 0.9);
+    margin-top: 12px;
+    padding: 6px 16px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 20px;
+    display: inline-block;
   }
 }
 
-.cinema-list {
-  background: #fff;
-  border-radius: 12px;
-  overflow: hidden;
+// 搜索栏
+.search-bar {
+  margin: -20px 0 20px;
+  padding: 0 10px;
+
+  .search-input {
+    background: #fff;
+    border-radius: 25px;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+
+    .search-icon {
+      color: #999;
+      margin-right: 10px;
+    }
+
+    .placeholder {
+      color: #999;
+      font-size: 14px;
+    }
+  }
 }
 
+// 影院列表
+.cinema-list {
+  background: transparent;
+}
+
+// 影院卡片 - 精美设计
 .cinema-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+
+  &:active {
+    transform: scale(0.98);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  }
+
+  // 顶部推荐标识
+  &.featured {
+    border: 2px solid #ff6b6b;
+
+    &::before {
+      content: '推荐';
+      position: absolute;
+      top: 0;
+      right: 0;
+      background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+      color: #fff;
+      font-size: 11px;
+      padding: 4px 12px;
+      border-bottom-left-radius: 12px;
+    }
+  }
+
+  // 外部调票警告
+  &.external {
+    border: 2px solid #ffc107;
+
+    &::before {
+      content: '外部调票';
+      position: absolute;
+      top: 0;
+      right: 0;
+      background: linear-gradient(135deg, #ffc107, #ffdb4d);
+      color: #333;
+      font-size: 11px;
+      padding: 4px 12px;
+      border-bottom-left-radius: 12px;
+    }
+  }
+}
+
+// 卡片头部
+.card-header {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 12px;
+
+  .cinema-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+    font-size: 24px;
+    color: #fff;
+  }
+
+  .cinema-info {
+    flex: 1;
+  }
+}
+
+// 影院名称
+.cinema-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+// 影院地址
+.cinema-address {
+  font-size: 12px;
+  color: #999;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  &::before {
+    content: '📍';
+  }
+}
+
+// 标签区域
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+// 标签样式 - 不同类型不同颜色
+.tag {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-weight: 500;
+
+}
+
+// 🔥 店长直供 - 红色
+.tag-owner {
+  background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+  color: #fff;
+
+  &::before {
+    content: '🔥';
+    margin-right: 4px;
+  }
+}
+
+// 💰 今日特价 - 金色
+.tag-discount {
+  background: linear-gradient(135deg, #ffc107, #ffdb4d);
+  color: #333;
+
+  &::before {
+    content: '💰';
+    margin-right: 4px;
+  }
+}
+
+// ⚡ 秒出票 - 绿色
+.tag-fast {
+  background: linear-gradient(135deg, #10b981, #34d399);
+  color: #fff;
+
+  &::before {
+    content: '⚡';
+    margin-right: 4px;
+  }
+}
+
+// 外部调票 - 灰色
+.tag-external {
+  background: #f0f0f0;
+  color: #999;
+  border: 1px solid #e0e0e0;
+
+  &::before {
+    content: '⏱️';
+    margin-right: 4px;
+  }
+}
+
+// 价格和操作区
+.card-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px;
-  border-bottom: 1px solid #f0f0f0;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed #f0f0f0;
+}
 
-  &:last-child {
-    border-bottom: none;
+.price-section {
+  .price-label {
+    font-size: 12px;
+    color: #999;
   }
+
+  .price-value {
+    font-size: 24px;
+    font-weight: bold;
+    color: #ff6b6b;
+
+    &::before {
+      content: '¥';
+      font-size: 16px;
+    }
+  }
+
+  .price-unit {
+    font-size: 12px;
+    color: #999;
+    margin-left: 4px;
+  }
+}
+
+// 购票按钮
+.buy-btn {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff;
+  padding: 10px 24px;
+  border-radius: 25px;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  transition: all 0.3s ease;
 
   &:active {
-    background: #f5f5f5;
+    transform: translateY(2px);
+    box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
   }
 }
 
-.cinema-name {
-  font-size: 16px;
-  font-weight: 500;
-  color: #333;
+// 空状态
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+
+  .empty-icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+  }
+
+  .empty-text {
+    font-size: 16px;
+    color: #999;
+    margin-bottom: 8px;
+  }
+
+  .empty-desc {
+    font-size: 14px;
+    color: #ccc;
+  }
 }
 
-.tags {
-  margin-top: 8px;
+// 加载状态
+.loading-state {
+  text-align: center;
+  padding: 40px;
+
+  .loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #f0f0f0;
+    border-top-color: #667eea;
+    border-radius: 50%;
+    margin: 0 auto 16px;
+    animation: spin 1s linear infinite;
+  }
+
+  .loading-text {
+    color: #999;
+    font-size: 14px;
+  }
 }
 
-.tag {
-  display: inline-block;
-  font-size: 12px;
-  color: #667eea;
-  background: rgba(102, 126, 234, 0.1);
-  padding: 2px 8px;
-  border-radius: 4px;
-  margin-right: 8px;
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-.arrow {
-  color: #999;
-  font-size: 18px;
-}
-
+// 旧样式兼容
 .loading, .empty {
   text-align: center;
   padding: 40px;
   color: #999;
+}
+
+.arrow {
+  color: #ccc;
+  font-size: 20px;
 }

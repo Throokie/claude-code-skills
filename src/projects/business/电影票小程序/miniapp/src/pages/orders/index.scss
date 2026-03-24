@@ -1,124 +1,289 @@
 .orders-page {
   min-height: 100vh;
-  background: #f5f5f5;
+  background: #f5f7fa;
 }
 
+// 头部
 .header {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   padding: 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -20px;
+    left: 0;
+    right: 0;
+    height: 40px;
+    background: linear-gradient(to bottom, #f5f7fa 0%, transparent 100%);
+    opacity: 0.3;
+  }
 
   .title {
-    font-size: 20px;
+    font-size: 22px;
     font-weight: bold;
     color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    &::before {
+      content: '📋';
+    }
   }
 
   .mock-tag {
-    background: rgba(255, 255, 255, 0.3);
-    padding: 4px 12px;
-    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    padding: 6px 14px;
+    border-radius: 20px;
     font-size: 12px;
     color: #fff;
-    cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, 0.3);
   }
 }
 
+// 订单列表
 .order-list {
-  padding: 10px;
+  padding: 10px 16px 30px;
 }
 
+// 订单卡片
 .order-card {
   background: #fff;
-  border-radius: 8px;
-  padding: 16px;
-  margin-bottom: 10px;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  position: relative;
+  overflow: hidden;
+
+  &:active {
+    transform: scale(0.99);
+  }
+
+  // 状态条
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+  }
+
+  &.status-pending::before { background: #909399; }
+  &.status-paid::before { background: #e6a23c; }
+  &.status-accepted::before { background: #9966ff; }
+  &.status-ticketed::before { background: #67c23a; }
+  &.status-completed::before { background: #409eff; }
+  &.status-refunded::before { background: #f56c6c; }
 }
 
 .order-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed #f0f0f0;
 }
 
 .order-no {
-  font-size: 12px;
+  font-size: 13px;
   color: #999;
+  font-family: monospace;
+  background: #f5f7fa;
+  padding: 4px 10px;
+  border-radius: 8px;
 }
 
 .status {
   font-size: 12px;
-  padding: 2px 8px;
-  border-radius: 4px;
-
-  &.status-pending { background: #f0f0f0; color: #999; }
-  &.status-paid { background: #fef0e6; color: #e6a23c; }
-  &.status-accepted { background: #f0e6ff; color: #9966ff; }
-  &.status-ticketed { background: #e6f7e6; color: #67c23a; }
-  &.status-completed { background: #e6f0ff; color: #409eff; }
-  &.status-refunded { background: #fee6e6; color: #f56c6c; }
-}
-
-.movie-name {
-  display: block;
-  font-size: 16px;
+  padding: 4px 12px;
+  border-radius: 20px;
   font-weight: 500;
-  color: #333;
+
+  &.status-pending { background: #f4f4f5; color: #909399; }
+  &.status-paid { background: #fdf6ec; color: #e6a23c; }
+  &.status-accepted { background: #f5f0ff; color: #9966ff; }
+  &.status-ticketed { background: #f0f9eb; color: #67c23a; }
+  &.status-completed { background: #ecf5ff; color: #409eff; }
+  &.status-refunded { background: #fef0f0; color: #f56c6c; }
 }
 
-.cinema-name {
-  display: block;
-  font-size: 14px;
-  color: #666;
-  margin-top: 4px;
+.order-body {
+  .movie-name {
+    display: block;
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+
+    &::before {
+      content: '🎬';
+      margin-right: 6px;
+    }
+  }
+
+  .cinema-name {
+    display: block;
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 6px;
+
+    &::before {
+      content: '🏢';
+      margin-right: 6px;
+    }
+  }
+
+  .show-info {
+    display: inline-flex;
+    align-items: center;
+    font-size: 14px;
+    color: #667eea;
+    background: #f0f5ff;
+    padding: 6px 12px;
+    border-radius: 8px;
+
+    &::before {
+      content: '🕐';
+      margin-right: 6px;
+    }
+  }
 }
 
-.show-info {
-  display: block;
-  font-size: 14px;
-  color: #667eea;
-  margin-top: 4px;
-}
-
+// 取票信息
 .ticket-info {
-  background: #f8f8f8;
-  padding: 12px;
-  border-radius: 4px;
-  margin-top: 12px;
+  background: linear-gradient(135deg, #f0f9eb 0%, #e6f7e6 100%);
+  padding: 16px;
+  border-radius: 12px;
+  margin-top: 16px;
+  border: 1px solid #d9f7d9;
 
   .seats {
     display: block;
     font-size: 14px;
     color: #333;
+    margin-bottom: 8px;
+
+    &::before {
+      content: '💺';
+      margin-right: 6px;
+    }
   }
 
   .code-word {
-    display: block;
-    font-size: 16px;
+    display: flex;
+    align-items: center;
+    font-size: 18px;
     font-weight: bold;
     color: #67c23a;
-    margin-top: 8px;
+
+    &::before {
+      content: '🔑';
+      margin-right: 8px;
+    }
   }
 }
 
+// 订单底部
 .order-footer {
   display: flex;
   justify-content: space-between;
-  margin-top: 12px;
-  padding-top: 12px;
+  align-items: center;
+  margin-top: 16px;
+  padding-top: 16px;
   border-top: 1px solid #f0f0f0;
+
+  .price {
+    font-size: 20px;
+    font-weight: bold;
+    color: #f56c6c;
+
+    &::before {
+      content: '¥';
+      font-size: 14px;
+    }
+  }
+
+  .count {
+    font-size: 14px;
+    color: #999;
+    background: #f5f7fa;
+    padding: 6px 12px;
+    border-radius: 8px;
+  }
 }
 
-.price {
-  font-size: 16px;
-  font-weight: bold;
-  color: #f56c6c;
-}
-
-.count {
-  font-size: 14px;
+// 加载和空状态
+.loading, .empty {
+  text-align: center;
+  padding: 60px 20px;
   color: #999;
+
+  .empty-icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+  }
+}
+
+// 状态进度条（新增）
+.status-progress {
+  display: flex;
+  align-items: center;
+  margin: 16px 0;
+  padding: 0 8px;
+
+  .progress-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+
+    .step-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #e0e0e0;
+      margin-bottom: 6px;
+
+      &.active {
+        background: #67c23a;
+        box-shadow: 0 0 0 4px rgba(103, 194, 58, 0.2);
+      }
+
+      &.current {
+        background: #667eea;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
+      }
+    }
+
+    .step-label {
+      font-size: 11px;
+      color: #999;
+
+      &.active, &.current {
+        color: #333;
+        font-weight: 500;
+      }
+    }
+  }
+
+  .progress-line {
+    flex: 1;
+    height: 2px;
+    background: #e0e0e0;
+    margin: 0 4px;
+    margin-bottom: 20px;
+
+    &.active {
+      background: linear-gradient(90deg, #67c23a, #67c23a);
+    }
+  }
 }

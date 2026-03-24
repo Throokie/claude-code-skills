@@ -230,46 +230,6 @@ async def create_order(
             expire_at=order.expire_at,
             created_at=order.created_at
         )
-    """
-    创建订单
-
-    - 验证用户
-    - 创建订单记录
-    - 返回订单信息用于支付
-    """
-    async with await get_session() as session:
-        order = await order_service.create_order(
-            session=session,
-            user_id=user_id,
-            cinema_code=request.cinema_code,
-            cinema_name=request.cinema_name,
-            movie_name=request.movie_name,
-            show_date=request.show_date,
-            show_time=request.show_time,
-            seat_count=request.seat_count,
-            unit_price=request.unit_price,
-            seat_preference=request.seat_preference,
-            hall_name=request.hall_name,
-            remark=request.remark
-        )
-
-        return OrderResponse(
-            order_no=order.order_no,
-            cinema_name=order.cinema_name,
-            movie_name=order.movie_name,
-            show_date=order.show_date,
-            show_time=order.show_time,
-            hall_name=order.hall_name,
-            seat_count=order.seat_count,
-            seat_preference=order.seat_preference,
-            seats=order.seats,
-            unit_price=order.unit_price,
-            total_price=order.total_price,
-            status=order.status,
-            code_word=order.code_word,
-            expire_at=order.expire_at,
-            created_at=order.created_at
-        )
 
 
 @router.post("/orders/{order_no}/pay")

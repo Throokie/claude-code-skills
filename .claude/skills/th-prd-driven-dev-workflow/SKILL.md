@@ -203,6 +203,9 @@ git commit -m "$(cat <<'EOF'
 - 自动提交: th-prd-driven-dev-workflow
 EOF
 )" --no-verify
+
+# 阶段1完成 - 输出信号给 ralph-evo
+console.log('[PHASE_COMPLETE] P1')
 ```
 
 ---
@@ -333,6 +336,9 @@ git commit -m "$(cat <<'EOF'
 - 自动提交: th-prd-driven-dev-workflow
 EOF
 )" --no-verify
+
+# 阶段2完成 - 输出信号给 ralph-evo
+console.log('[PHASE_COMPLETE] P2')
 ```
 
 ---
@@ -391,6 +397,9 @@ git commit -m "$(cat <<'EOF'
 - 自动提交: th-prd-driven-dev-workflow
 EOF
 )" --no-verify
+
+# 阶段3完成 - 输出信号给 ralph-evo
+console.log('[PHASE_COMPLETE] P3')
 ```
 
 ---
@@ -452,6 +461,9 @@ git commit -m "$(cat <<EOF
 - 自动提交: th-prd-driven-dev-workflow
 EOF
 )" --no-verify
+
+# 阶段4完成 - 输出信号给 ralph-evo
+console.log('[PHASE_COMPLETE] P4')
 ```
 
 ---
@@ -567,6 +579,9 @@ git commit -m "$(cat <<'EOF'
 - 自动提交: th-prd-driven-dev-workflow
 EOF
 )" --no-verify
+
+# 阶段5完成 - 输出信号给 ralph-evo
+console.log('[PHASE_COMPLETE] P5')
 ```
 
 ---
@@ -642,6 +657,9 @@ git commit -m "$(cat <<EOF
 - 自动提交: th-prd-driven-dev-workflow
 EOF
 )" --no-verify
+
+# 阶段6完成 - 输出信号给 ralph-evo
+console.log('[PHASE_COMPLETE] P6')
 ```
 
 ---
@@ -806,6 +824,9 @@ EOF
 
 # 推送所有提交到远程（如果配置了远程仓库）
 git push origin $(git branch --show-current) 2>/dev/null || echo "ℹ️ 未配置远程仓库，仅本地提交"
+
+# 阶段7完成 - 输出信号给 ralph-evo
+console.log('[PHASE_COMPLETE] P7')
 ```
 
 ---

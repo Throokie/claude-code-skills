@@ -19,6 +19,8 @@ export default function OrderPage() {
 
     setLoading(true)
     try {
+      Taro.showLoading({ title: '正在创建订单...' })
+
       const res = await Taro.request({
         url: `${API_BASE}/orders`,
         method: 'POST',
@@ -42,7 +44,9 @@ export default function OrderPage() {
           method: 'POST'
         })
 
-        Taro.showToast({ title: '下单成功', icon: 'success' })
+        Taro.hideLoading()
+        Taro.showToast({ title: '支付成功', icon: 'success' })
+
         setTimeout(() => {
           Taro.redirectTo({
             url: `/pages/orders/index`
@@ -50,7 +54,8 @@ export default function OrderPage() {
         }, 1500)
       }
     } catch (e) {
-      Taro.showToast({ title: '下单失败', icon: 'error' })
+      Taro.hideLoading()
+      Taro.showToast({ title: '下单失败，请重试', icon: 'error' })
     } finally {
       setLoading(false)
     }
@@ -63,11 +68,16 @@ export default function OrderPage() {
         <Text className='movie-name'>{decodeURIComponent(router.movie || '未选择电影')}</Text>
         <Text className='cinema-name'>{router.cinemaName}</Text>
         <Text className='show-time'>{router.time || '请选择场次'}</Text>
+
+        <View className='movie-tags'>
+          <Text className='movie-tag'>2D</Text>
+          <Text className='movie-tag'>国语</Text>
+        </View>
       </View>
 
-      {/* 座位选择 */}
+      {/* 票数选择 */}
       <View className='section'>
-        <Text className='section-title'>票数</Text>
+        <Text className='section-title'>选择票数</Text>
         <View className='count-selector'>
           {[1, 2, 3, 4].map(n => (
             <View
@@ -75,12 +85,13 @@ export default function OrderPage() {
               className={`count-btn ${count === n ? 'active' : ''}`}
               onClick={() => setCount(n)}
             >
-              {n}
+              {n}张
             </View>
           ))}
         </View>
       </View>
 
+      {/* 座位偏好 */}
       <View className='section'>
         <Text className='section-title'>座位偏好</Text>
         <Picker
@@ -90,35 +101,56 @@ export default function OrderPage() {
           onChange={e => setPreference(e.detail.value)}
         >
           <View className='picker'>
-            {SEAT_PREFERENCES[preference]} {'>'}
+            <Text>{SEAT_PREFERENCES[preference]}</Text>
           </View>
         </Picker>
       </View>
 
+      {/* 备注 */}
       <View className='section'>
-        <Text className='section-title'>备注（可选）</Text>
+        <Text className='section-title'>备注信息</Text>
         <Input
           className='remark-input'
-          placeholder='如: 带小孩，尽量靠过道'
+          placeholder='如：带小孩，尽量靠过道'
           value={remark}
           onInput={e => setRemark(e.detail.value)}
         />
       </View>
 
-      {/* 价格 */}
+      {/* 价格明细 */}
       <View className='price-section'>
-        <Text className='price-label'>单价: ¥35</Text>
-        <Text className='price-total'>总价: ¥{35 * count}</Text>
+        <View className='price-row'>
+          <Text className='price-label'>票价</Text>
+          <Text className='price-value'>¥35 × {count}张</Text>
+        </View>
+        <View className='price-row'>
+          <Text className='price-label'>优惠</Text>
+          <Text className='price-value'>
+            -¥0<Text className='discount-tag'>首单优惠</Text>
+          </Text>
+        </View>
+        <View className='price-row'>
+          <Text className='price-label'>实付金额</Text>
+          <Text className='price-value highlight'>{35 * count}</Text>
+        </View>
       </View>
 
       {/* 提交按钮 */}
       <Button
         className='submit-btn'
         loading={loading}
+        disabled={loading}
         onClick={createOrder}
       >
         确认支付 ¥{35 * count}
       </Button>
+
+      {/* 安全提示 */}
+      <View className='safety-tips'>
+        <Text className='tip-item secure'>支付安全</Text>
+        <Text className='tip-item refund'>极速退款</Text>
+        <Text className='tip-item service'>客服支持</Text>
+      </View>
     </View>
   )
 }
