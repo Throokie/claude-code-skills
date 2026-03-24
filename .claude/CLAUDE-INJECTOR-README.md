@@ -20,11 +20,11 @@
 
 **claude-injector 运行状态**（tmux 多窗格实时监控）
 
-![Injector Status](/home/throokie/下载/tmux-web/CopyQ.OiPLfo.png)
+![Injector Status](./docs/images/injector-status.png)
 
 **ralph-evo 工作流进度**（八字算命项目 - 已完成6阶段）
 
-![Workflow Progress](/home/throokie/下载/tmux-web/CopyQ.tXkMqL.png)
+![Workflow Progress](./docs/images/workflow-progress.png)
 
 ---
 
